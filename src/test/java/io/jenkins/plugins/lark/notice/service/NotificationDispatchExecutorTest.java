@@ -6,7 +6,7 @@ import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.BuildJobModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RunUser;
 import org.junit.Test;
 
@@ -16,7 +16,6 @@ import java.util.Set;
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.LF;
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -25,6 +24,35 @@ import static org.junit.Assert.assertTrue;
  * @author xm.z
  */
 public class NotificationDispatchExecutorTest {
+
+    private static BuildJobModel createModel() {
+        return BuildJobModel.builder()
+                .projectName("Demo Project")
+                .projectUrl("https://example.com/project")
+                .jobName("#42")
+                .jobUrl("https://example.com/job/42")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .duration("1 sec")
+                .executorName("xm.z")
+                .build();
+    }
+
+    private static LarkNotifierConfig createNotifierConfig(boolean raw, String title, String content,
+                                                           String message, String atUserId) {
+        return new LarkNotifierConfig(
+                raw,
+                false,
+                true,
+                "robot-test",
+                "Robot Test",
+                false,
+                atUserId,
+                title,
+                content,
+                message,
+                Set.of("START", "SUCCESS")
+        );
+    }
 
     @Test
     public void resolveAtUserIdsShouldMergeConfiguredAndExecutorIdentities() {
@@ -72,11 +100,11 @@ public class NotificationDispatchExecutorTest {
         String rawText = NotificationDispatchExecutor.resolveMessageText(rawConfig, model, envVars, RobotType.LARK, Locale.US);
         assertEquals("raw-42", rawText);
 
-        MessageModel messageModel = NotificationDispatchExecutor.buildMessageModel(
-                model, rawConfig, Set.of("u1"), rawText, Locale.US);
-        assertEquals(MsgTypeEnum.CARD, messageModel.getType());
-        assertEquals(Set.of("u1"), messageModel.getAtUserIds());
-        assertEquals("raw-42", messageModel.getText());
+        MessageIntent intent = model.buildCardIntent(Locale.US).toBuilder()
+                .atAll(rawConfig.isAtAll()).atUserIds(Set.of("u1")).text(rawText).build();
+        assertEquals(MsgTypeEnum.CARD, intent.getType());
+        assertEquals(Set.of("u1"), intent.getAtUserIds());
+        assertEquals("raw-42", intent.getText());
     }
 
     @Test
@@ -88,13 +116,12 @@ public class NotificationDispatchExecutorTest {
         NotificationDispatchExecutor.applyModelTemplateValues(config, model, envVars, Locale.SIMPLIFIED_CHINESE);
         String markdownText = NotificationDispatchExecutor.resolveMessageText(
                 config, model, envVars, RobotType.LARK, Locale.SIMPLIFIED_CHINESE);
-        MessageModel messageModel = NotificationDispatchExecutor.buildMessageModel(
-                model, config, Set.of(), markdownText, Locale.SIMPLIFIED_CHINESE);
+        MessageIntent intent = model.buildCardIntent(Locale.SIMPLIFIED_CHINESE);
 
         assertTrue(markdownText.contains("**任务名称**"));
         assertTrue(markdownText.contains("**构建状态**"));
-        assertEquals("更改记录", messageModel.getButtons().get(0).getText());
-        assertEquals("控制台", messageModel.getButtons().get(1).getText());
+        assertEquals("更改记录", intent.getButtons().get(0).getText());
+        assertEquals("控制台", intent.getButtons().get(1).getText());
     }
 
     @Test
@@ -106,42 +133,5 @@ public class NotificationDispatchExecutorTest {
         NotificationDispatchExecutor.applyModelTemplateValues(config, model, envVars, Locale.US);
 
         assertEquals("📢 Jenkins Build Notice", model.getTitle());
-    }
-
-    @Test
-    public void shouldFailBuildOnlyWhenSendFailedAndPolicyEnabled() {
-        assertFalse(NotificationDispatchExecutor.shouldFailBuild(false, true));
-        assertFalse(NotificationDispatchExecutor.shouldFailBuild(false, false));
-        assertTrue(NotificationDispatchExecutor.shouldFailBuild(true, true));
-        assertFalse(NotificationDispatchExecutor.shouldFailBuild(true, false));
-    }
-
-    private static BuildJobModel createModel() {
-        return BuildJobModel.builder()
-                .projectName("Demo Project")
-                .projectUrl("https://example.com/project")
-                .jobName("#42")
-                .jobUrl("https://example.com/job/42")
-                .statusType(BuildStatusEnum.SUCCESS)
-                .duration("1 sec")
-                .executorName("xm.z")
-                .build();
-    }
-
-    private static LarkNotifierConfig createNotifierConfig(boolean raw, String title, String content,
-                                                           String message, String atUserId) {
-        return new LarkNotifierConfig(
-                raw,
-                false,
-                true,
-                "robot-test",
-                "Robot Test",
-                false,
-                atUserId,
-                title,
-                content,
-                message,
-                Set.of("START", "SUCCESS")
-        );
     }
 }

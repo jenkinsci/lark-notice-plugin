@@ -8,7 +8,6 @@ import io.jenkins.plugins.lark.notice.config.LarkNotifier;
 import io.jenkins.plugins.lark.notice.config.LarkNotifierConfig;
 import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.config.property.LarkJobProperty;
-import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.MessageSenderRegistry;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,7 +43,7 @@ public class NotifierIntegrationTest {
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
 
         // Warm sender cache to simulate real runtime state before config submit.
-        MessageDispatcher.getInstance().send(TaskListener.NULL, robot.getId(), null);
+        MessageSenderRegistry.getInstance().resolve(robot.getId());
 
         FreeStyleProject project = jenkins.createFreeStyleProject("roundtrip");
         LarkNotifierConfig notifierConfig = createEnabledNotifierConfig(robot.getId(), "START");

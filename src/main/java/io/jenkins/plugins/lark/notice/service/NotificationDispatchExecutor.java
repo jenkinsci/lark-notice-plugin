@@ -13,9 +13,12 @@ import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.logging.NoticeLog;
 import io.jenkins.plugins.lark.notice.logging.NoticeLogKey;
 import io.jenkins.plugins.lark.notice.logging.NoticeTrace;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.BuildJobModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RunUser;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import org.apache.commons.lang3.StringUtils;
@@ -67,9 +70,13 @@ public final class NotificationDispatchExecutor {
         Locale locale = MessageLocaleResolver.resolve(config);
         applyModelTemplateValues(config, model, context.envVars(), locale);
         String messageText = resolveMessageText(config, model, context.envVars(), robotType, locale);
-        MessageModel messageModel = buildMessageModel(model, config, atUserIds, messageText, locale);
+        RobotProtocolType protocol = RobotProtocolType.fromRobotType(robotType);
+        MessageIntent intent = model.buildCardIntent(locale).toBuilder()
+                .atAll(config.isAtAll()).atUserIds(atUserIds).text(messageText).build();
+        BuildContext buildCtx = model.buildContext(locale);
+        PlatformPayload payload = model.cardPayload(protocol);
 
-        SendResult result = messageDispatcher.send(listener, config.getRobotId(), messageModel);
+        SendResult result = messageDispatcher.send(listener, config.getRobotId(), buildCtx, intent, payload);
         boolean failBuild = LarkGlobalConfig.getInstance().isFailBuildOnNotificationFailure();
         handleSendResult(source, run, listener, occasion, config.getRobotId(), result, failBuild);
     }
@@ -133,24 +140,6 @@ public final class NotificationDispatchExecutor {
     }
 
     /**
-     * Builds final message model used by dispatcher.
-     *
-     * @param model       build model
-     * @param config      notifier config
-     * @param atUserIds   final at-user ids
-     * @param messageText final text payload
-     * @return built message model
-     */
-    static MessageModel buildMessageModel(BuildJobModel model, LarkNotifierConfig config,
-                                          Set<String> atUserIds, String messageText, Locale locale) {
-        return model.messageModelBuilder(locale)
-                .atAll(config.isAtAll())
-                .atUserIds(atUserIds)
-                .text(messageText)
-                .build();
-    }
-
-    /**
      * Handles send result logging and the configurable build-result fallback.
      *
      * @param source             logical trigger source
@@ -181,7 +170,7 @@ public final class NotificationDispatchExecutor {
 
         String failureMessage = sendFailureMessage(sendResult);
 
-        if (shouldFailBuild(sendFailed, failBuild)) {
+        if (failBuild) {
             run.setResult(Result.FAILURE);
             NoticeLog.error(listener, "%s", failureMessage);
             NoticeLog.trace(listener, NoticeTrace.NOTIFICATION_MARK_BUILD_FAILURE,
@@ -211,14 +200,4 @@ public final class NotificationDispatchExecutor {
                 : StringUtils.defaultIfBlank(sendResult.getMsg(), Messages.dispatcher_error_send_result_missing());
     }
 
-    /**
-     * Pure decision helper: whether a failed send should fail the build.
-     *
-     * @param sendFailed whether sending failed
-     * @param failBuild  effective policy flag
-     * @return {@code true} only when sending failed and the policy requires failing the build
-     */
-    static boolean shouldFailBuild(boolean sendFailed, boolean failBuild) {
-        return sendFailed && failBuild;
-    }
 }

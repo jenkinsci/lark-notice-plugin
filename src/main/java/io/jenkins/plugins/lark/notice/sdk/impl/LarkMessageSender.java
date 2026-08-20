@@ -1,8 +1,10 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.*;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Card;
@@ -14,17 +16,17 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author xm.z
  */
-public class LarkMessageSender extends AbstractMessageSender {
+public class LarkMessageSender extends AbstractMessageSender<LarkPayload> {
 
     public LarkMessageSender(RobotConfigModel robotConfig) {
         super(robotConfig);
     }
 
     /**
-     * Constructs the request parameters for the Lark API.
+     * Wraps a message body with robot signing fields.
      *
-     * @param message The message content.
-     * @return The request parameters for the Lark API.
+     * @param message message body
+     * @return signed JSON request body
      */
     protected String signToJson(Object message) {
         ObjectNode objectNode = JsonUtils.valueToTree(message);
@@ -37,88 +39,52 @@ public class LarkMessageSender extends AbstractMessageSender {
         return JsonUtils.toJson(objectNode);
     }
 
-    /**
-     * Sends a text message.
-     *
-     * @param msg The message content.
-     * @return The send result.
-     */
     @Override
-    public SendResult sendText(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        LarkTextMessage message = LarkTextMessage.build(msg.getAt(), text);
+    public SendResult sendText(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        LarkTextMessage message = LarkTextMessage.build(intent.getAt(), text);
         return sendMessage(signToJson(message));
     }
 
-    /**
-     * Sends an image message.
-     *
-     * @param msg The message content.
-     * @return The send result.
-     */
     @Override
-    public SendResult sendImage(MessageModel msg) {
-        String text = msg.getText();
-        LarkImageMessage message = LarkImageMessage.build(text);
+    public SendResult sendImage(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        LarkImageMessage message = LarkImageMessage.build(intent.getText());
         return sendMessage(signToJson(message));
     }
 
-    /**
-     * Sends a shared chat message.
-     *
-     * @param msg The message content.
-     * @return The send result.
-     */
     @Override
-    public SendResult sendShareChat(MessageModel msg) {
-        String text = msg.getText();
-        LarkShareChatMessage message = LarkShareChatMessage.build(text);
+    public SendResult sendShareChat(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        LarkShareChatMessage message = LarkShareChatMessage.build(intent.getText());
         return sendMessage(signToJson(message));
     }
 
-    /**
-     * Sends a markdown message.
-     *
-     * @param msg The message content encapsulated in a MessageModel object.
-     * @return SendResult object containing the result of the send operation.
-     */
     @Override
-    public SendResult sendMarkdown(MessageModel msg) {
-        msg.setTitle(addKeyWord(msg.getTitle(), robotConfig.getKeys()));
-        LarkCardMessage message = LarkCardMessage.build(msg);
+    public SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        MessageIntent signed = intent.toBuilder()
+                .title(addKeyWord(intent.getTitle(), robotConfig.getKeys()))
+                .build();
+        LarkCardMessage message = LarkCardMessage.build(signed, payload);
         return sendMessage(signToJson(message));
     }
 
-    /**
-     * Sends a rich text message.
-     *
-     * @param msg The message content.
-     * @return The send result.
-     */
     @Override
-    public SendResult sendPost(MessageModel msg) {
-        String title = addKeyWord(msg.getTitle(), robotConfig.getKeys());
-        LarkPostMessage message = LarkPostMessage.build(title, msg.getText());
+    public SendResult sendPost(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        String title = addKeyWord(intent.getTitle(), robotConfig.getKeys());
+        LarkPostMessage message = LarkPostMessage.build(title, intent.getText());
         return sendMessage(signToJson(message));
     }
 
-    /**
-     * Sends a card message.
-     *
-     * @param msg Message details.
-     * @return Failure result.
-     */
     @Override
-    public SendResult sendCard(MessageModel msg) {
-        String text = msg.getText();
+    public SendResult sendCard(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
+        String text = intent.getText();
         if (JsonUtils.isValidJson(text)) {
             Card card = JsonUtils.readValue(text, Card.class);
-            LarkCardMessage message = new LarkCardMessage(card);
-            return sendMessage(signToJson(message));
+            return sendMessage(signToJson(new LarkCardMessage(card)));
         }
-        msg.setTitle(addKeyWord(msg.getTitle(), robotConfig.getKeys()));
-        LarkCardMessage message = LarkCardMessage.build(msg);
+        MessageIntent signed = intent.toBuilder()
+                .title(addKeyWord(intent.getTitle(), robotConfig.getKeys()))
+                .build();
+        LarkCardMessage message = LarkCardMessage.build(signed, payload);
         return sendMessage(signToJson(message));
     }
-
 }

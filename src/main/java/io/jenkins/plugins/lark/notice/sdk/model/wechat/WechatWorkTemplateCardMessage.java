@@ -3,7 +3,10 @@ package io.jenkins.plugins.lark.notice.sdk.model.wechat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.CardField;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,6 +21,8 @@ import java.util.Locale;
 
 /**
  * WeCom news-notice template card message.
+ *
+ * @author xm.z
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -27,7 +32,9 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
 
     private static final String DEFAULT_CARD_IMAGE_URL = "https://www.jenkins.io/images/post-images/2025/07/24/redesigning-jenkins-part-two.png";
 
-    private static final String SOURCE_DESCRIPTION = "Lark Notice · Jenkins";
+    private static final String DEFAULT_SOURCE_DESCRIPTION = "Lark Notice · Jenkins";
+
+    private static final String DEFAULT_TITLE = "Jenkins Build Notice";
 
     private static final String CARD_TYPE_NEWS_NOTICE = "news_notice";
 
@@ -47,43 +54,58 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         setMsgType("template_card");
     }
 
-    public static WechatWorkTemplateCardMessage build(MessageModel messageModel, String content) {
-        String title = StringUtils.defaultIfBlank(messageModel.getTitle(), "Jenkins Build Notice");
-        String actionUrl = StringUtils.defaultIfBlank(resolveActionUrl(messageModel), messageModel.getJobUrl());
+    /**
+     * Builds a news-notice template card from the layered message model.
+     *
+     * @param ctx     shared build context supplying default card rows when the payload does not override them
+     * @param intent  cross-platform rendering intent (title, images, buttons, click-through URL)
+     * @param payload WeCom-specific payload (custom card rows, source description, additional content)
+     * @param content raw markdown/plain text used as vertical content fallback
+     * @return assembled template card message
+     */
+    public static WechatWorkTemplateCardMessage build(BuildContext ctx, MessageIntent intent,
+                                                      WeComPayload payload, String content) {
+        String title = StringUtils.defaultIfBlank(intent.getTitle(), DEFAULT_TITLE);
+        String actionUrl = StringUtils.defaultIfBlank(resolveActionUrl(intent), ctx.getJobUrl());
         TemplateCard card = new TemplateCard();
         card.setCardType(CARD_TYPE_NEWS_NOTICE);
-        card.setSource(buildSource(messageModel));
+        card.setSource(buildSource(ctx, payload));
         card.setMainTitle(new MainTitle(title, null));
-        card.setCardImage(buildCardImage(messageModel));
-        card.setHorizontalContentList(resolveHorizontalContentList(messageModel));
-        card.setVerticalContentList(resolveVerticalContentList(messageModel, content));
-        card.setJumpList(resolveJumpList(messageModel));
+        card.setCardImage(buildCardImage(intent));
+        card.setHorizontalContentList(resolveHorizontalContentList(ctx, payload));
+        card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload, content));
+        card.setJumpList(resolveJumpList(intent));
         card.setCardAction(new CardAction(LINK_TYPE, actionUrl));
         return new WechatWorkTemplateCardMessage(card);
     }
 
-    private static Source buildSource(MessageModel messageModel) {
-        return new Source(DEFAULT_SOURCE_ICON_URL, SOURCE_DESCRIPTION, resolveSourceColor(messageModel.getStatusType()));
+    private static Source buildSource(BuildContext ctx, WeComPayload payload) {
+        String desc = StringUtils.defaultIfBlank(payload.getSourceDesc(), DEFAULT_SOURCE_DESCRIPTION);
+        return new Source(DEFAULT_SOURCE_ICON_URL, desc, resolveSourceColor(ctx.getStatusType()));
     }
 
-    private static CardImage buildCardImage(MessageModel messageModel) {
-        return new CardImage(resolveCardImageUrl(messageModel), CARD_IMAGE_ASPECT_RATIO);
+    private static CardImage buildCardImage(MessageIntent intent) {
+        return new CardImage(resolveCardImageUrl(intent), CARD_IMAGE_ASPECT_RATIO);
     }
 
-    private static String resolveActionUrl(MessageModel messageModel) {
-        if (!CollectionUtils.isEmpty(messageModel.getButtons())) {
-            return StringUtils.defaultIfBlank(messageModel.getButtons().get(0).getUrl(), messageModel.getMessageUrl());
+    private static String resolveActionUrl(MessageIntent intent) {
+        if (!CollectionUtils.isEmpty(intent.getButtons())) {
+            return StringUtils.defaultIfBlank(intent.getButtons().get(0).getUrl(), intent.getMessageUrl());
         }
-        return StringUtils.defaultIfBlank(messageModel.getMessageUrl(), messageModel.getSingleUrl());
+        return StringUtils.defaultIfBlank(intent.getMessageUrl(), null);
     }
 
-    private static String resolveCardImageUrl(MessageModel messageModel) {
-        String topImageUrl = messageModel.getTopImg() == null ? null : messageModel.getTopImg().getImgKey();
-        if (isHttpUrl(topImageUrl)) {
-            return topImageUrl;
+    /**
+     * Resolves the card image URL. WeCom only accepts public HTTP(S) URLs, so image keys (used by
+     * Lark) are ignored. Priority: {@link MessageIntent#getPicUrl()} then a resolved HTTP top-image
+     * URL, then the built-in Jenkins image. This fixes the "card image cannot be set" issue.
+     */
+    private static String resolveCardImageUrl(MessageIntent intent) {
+        if (isHttpUrl(intent.getPicUrl())) {
+            return intent.getPicUrl();
         }
-        if (isHttpUrl(messageModel.getPicUrl())) {
-            return messageModel.getPicUrl();
+        if (intent.getTopImg() != null && isHttpUrl(intent.getTopImg().getImgKey())) {
+            return intent.getTopImg().getImgKey();
         }
         return DEFAULT_CARD_IMAGE_URL;
     }
@@ -93,28 +115,42 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         return StringUtils.startsWith(url, "https://") || StringUtils.startsWith(url, "http://");
     }
 
-    private static List<Jump> resolveJumpList(MessageModel messageModel) {
-        if (CollectionUtils.isEmpty(messageModel.getButtons())) {
+    private static List<Jump> resolveJumpList(MessageIntent intent) {
+        if (CollectionUtils.isEmpty(intent.getButtons())) {
             return null;
         }
-        return messageModel.getButtons().stream()
+        return intent.getButtons().stream()
                 .filter(button -> StringUtils.isNotBlank(button.getText()) && StringUtils.isNotBlank(button.getUrl()))
                 .limit(MAX_JUMP_ITEMS)
                 .map(button -> new Jump(LINK_TYPE, button.getUrl(), button.getText()))
                 .toList();
     }
 
-    private static List<HorizontalContent> resolveHorizontalContentList(MessageModel messageModel) {
-        Locale locale = messageModel.getLocale();
+    /**
+     * Resolves horizontal content rows. Uses payload-supplied {@link CardField}s when present
+     * (customizable rows), otherwise builds the default build-info rows from the context.
+     */
+    private static List<HorizontalContent> resolveHorizontalContentList(BuildContext ctx, WeComPayload payload) {
+        if (CollectionUtils.isNotEmpty(payload.getCardFields())) {
+            return payload.getCardFields().stream()
+                    .filter(field -> StringUtils.isNotBlank(field.getValue()))
+                    .map(WechatWorkTemplateCardMessage::toHorizontalContent)
+                    .toList();
+        }
+        Locale locale = ctx.getLocale();
         List<HorizontalContent> contents = new ArrayList<>();
-        addHorizontalContent(contents, NoticeI18n.buildMessageProjectName(locale), messageModel.getProjectName(),
-                messageModel.getProjectUrl());
-        addHorizontalContent(contents, NoticeI18n.buildMessageJobName(locale), messageModel.getJobName(),
-                messageModel.getJobUrl());
-        addHorizontalContent(contents, NoticeI18n.buildMessageStatus(locale), resolveStatusLabel(messageModel, locale), null);
-        addHorizontalContent(contents, NoticeI18n.buildMessageDuration(locale), messageModel.getDuration(), null);
-        addHorizontalContent(contents, NoticeI18n.buildMessageExecutor(locale), messageModel.getExecutorName(), null);
+        addHorizontalContent(contents, NoticeI18n.buildMessageProjectName(locale), ctx.getProjectName(), ctx.getProjectUrl());
+        addHorizontalContent(contents, NoticeI18n.buildMessageJobName(locale), ctx.getJobName(), ctx.getJobUrl());
+        addHorizontalContent(contents, NoticeI18n.buildMessageStatus(locale), resolveStatusLabel(ctx, locale), null);
+        addHorizontalContent(contents, NoticeI18n.buildMessageDuration(locale), ctx.getDuration(), null);
+        addHorizontalContent(contents, NoticeI18n.buildMessageExecutor(locale), ctx.getExecutorName(), null);
         return contents.isEmpty() ? null : contents;
+    }
+
+    private static HorizontalContent toHorizontalContent(CardField field) {
+        int type = field.resolveType();
+        String url = type == LINK_TYPE ? field.getUrl() : null;
+        return new HorizontalContent(type, field.getKeyname(), field.getValue(), url);
     }
 
     private static void addHorizontalContent(List<HorizontalContent> contents, String key, String value, String url) {
@@ -125,26 +161,28 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         contents.add(new HorizontalContent(hasUrl ? LINK_TYPE : TEXT_TYPE, key, value, hasUrl ? url : null));
     }
 
-    private static List<VerticalContent> resolveVerticalContentList(MessageModel messageModel, String content) {
-        if (StringUtils.isNotBlank(messageModel.getAdditionalContent())) {
-            return List.of(new VerticalContent(StringUtils.defaultString(messageModel.getTitle()),
-                    messageModel.getAdditionalContent()));
+    private static List<VerticalContent> resolveVerticalContentList(BuildContext ctx, MessageIntent intent,
+                                                                      WeComPayload payload, String content) {
+        if (StringUtils.isNotBlank(payload.getAdditionalContent())) {
+            return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), payload.getAdditionalContent()));
         }
-        if (hasStructuredBuildFields(messageModel)) {
+        // When the card already renders structured build-info rows, skip the vertical text block
+        // to avoid duplicating the same content in two places.
+        if (hasStructuredBuildFields(ctx)) {
             return null;
         }
         String plainText = toPlainText(content);
         if (StringUtils.isBlank(plainText)) {
             return null;
         }
-        return List.of(new VerticalContent(StringUtils.defaultString(messageModel.getTitle()), plainText));
+        return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), plainText));
     }
 
-    private static boolean hasStructuredBuildFields(MessageModel messageModel) {
-        return StringUtils.isNotBlank(messageModel.getProjectName())
-                || StringUtils.isNotBlank(messageModel.getJobName())
-                || StringUtils.isNotBlank(messageModel.getDuration())
-                || StringUtils.isNotBlank(messageModel.getExecutorName());
+    private static boolean hasStructuredBuildFields(BuildContext ctx) {
+        return StringUtils.isNotBlank(ctx.getProjectName())
+                || StringUtils.isNotBlank(ctx.getJobName())
+                || StringUtils.isNotBlank(ctx.getDuration())
+                || StringUtils.isNotBlank(ctx.getExecutorName());
     }
 
     private static String toPlainText(String markdown) {
@@ -157,8 +195,8 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
                 .trim();
     }
 
-    private static String resolveStatusLabel(MessageModel messageModel, Locale locale) {
-        BuildStatusEnum statusType = messageModel.getStatusType();
+    private static String resolveStatusLabel(BuildContext ctx, Locale locale) {
+        BuildStatusEnum statusType = ctx.getStatusType();
         return statusType == null ? "" : statusType.getLabel(locale);
     }
 

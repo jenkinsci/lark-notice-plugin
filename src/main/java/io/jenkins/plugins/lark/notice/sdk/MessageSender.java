@@ -1,92 +1,109 @@
 package io.jenkins.plugins.lark.notice.sdk;
 
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * MessageSender is an interface designed to abstract the process of sending various types of messages.
- * It allows for sending text, markdown, and other forms of messages through different platforms.
- * The interface provides default implementations for several message types that might not be supported across all platforms,
- * indicating failure for such cases. Additionally, it includes a utility method for appending keywords to messages,
- * enhancing their functionality or discoverability.
+ * Sends a typed message payload to a robot platform. The generic {@code <T>} pins the
+ * platform-specific payload type a sender may consume, so a sender cannot read fields belonging
+ * to another platform. {@link #sendText} and {@link #sendMarkdown} are abstract because every
+ * supported platform implements them; the remaining {@code sendX} methods default to an
+ * "unsupported" failure and platforms override only the ones they support.
  *
+ * @param <T> platform-specific payload type
  * @author xm.z
  */
-public interface MessageSender {
+public interface MessageSender<T extends PlatformPayload> {
 
     /**
      * Sends a text message.
      *
-     * @param msg Message details.
-     * @return Result of the send operation.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return result of the send operation
      */
-    SendResult sendText(MessageModel msg);
-
-    /**
-     * Default method to send an image message, not supported by default.
-     *
-     * @param msg Message details.
-     * @return Failure result.
-     */
-    default SendResult sendImage(MessageModel msg) {
-        return SendResult.fail("This type of message is not supported.");
-    }
-
-    /**
-     * Default method to send a share chat message, not supported by default.
-     *
-     * @param msg Message details.
-     * @return Failure result.
-     */
-    default SendResult sendShareChat(MessageModel msg) {
-        return SendResult.fail("This type of message is not supported.");
-    }
+    SendResult sendText(BuildContext ctx, MessageIntent intent, T payload);
 
     /**
      * Sends a markdown message.
      *
-     * @param msg Message details.
-     * @return Result of the send operation.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return result of the send operation
      */
-    SendResult sendMarkdown(MessageModel msg);
+    SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, T payload);
 
     /**
-     * Default method to send a link message, not supported by default.
+     * Sends an image message. Unsupported unless overridden.
      *
-     * @param msg Message details.
-     * @return Failure result.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
      */
-    default SendResult sendLink(MessageModel msg) {
+    default SendResult sendImage(BuildContext ctx, MessageIntent intent, T payload) {
         return SendResult.fail("This type of message is not supported.");
     }
 
     /**
-     * Default method to send a post message, not supported by default.
+     * Sends a shared-chat message. Unsupported unless overridden.
      *
-     * @param msg Message details.
-     * @return Failure result.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
      */
-    default SendResult sendPost(MessageModel msg) {
+    default SendResult sendShareChat(BuildContext ctx, MessageIntent intent, T payload) {
         return SendResult.fail("This type of message is not supported.");
     }
 
     /**
-     * Default method to send a card message, not supported by default.
+     * Sends a link message. Unsupported unless overridden.
      *
-     * @param msg Message details.
-     * @return Failure result.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
      */
-    default SendResult sendCard(MessageModel msg) {
+    default SendResult sendLink(BuildContext ctx, MessageIntent intent, T payload) {
         return SendResult.fail("This type of message is not supported.");
     }
 
     /**
-     * Appends keywords to a message.
+     * Sends a rich-text post message. Unsupported unless overridden.
      *
-     * @param str  Original message content.
-     * @param keys Keywords to append.
-     * @return Content with appended keywords.
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
+     */
+    default SendResult sendPost(BuildContext ctx, MessageIntent intent, T payload) {
+        return SendResult.fail("This type of message is not supported.");
+    }
+
+    /**
+     * Sends an interactive card message. Unsupported unless overridden.
+     *
+     * @param ctx    shared build context
+     * @param intent cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
+     */
+    default SendResult sendCard(BuildContext ctx, MessageIntent intent, T payload) {
+        return SendResult.fail("This type of message is not supported.");
+    }
+
+    /**
+     * Appends robot keywords to message content.
+     *
+     * @param str  original content
+     * @param keys keywords to append
+     * @return content with appended keywords
      */
     default String addKeyWord(String str, String keys) {
         if (StringUtils.isEmpty(keys)) {
@@ -94,5 +111,4 @@ public interface MessageSender {
         }
         return str + " " + keys;
     }
-
 }

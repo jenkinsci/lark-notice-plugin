@@ -10,7 +10,9 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.model.RunUser;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -181,35 +183,38 @@ public class WechatWorkStep extends AbstractStep {
     @Override
     protected SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener) {
         String robotId = envVars.expand(robot);
-        MessageModel message = buildMessage(run, envVars, listener, robotId);
-        return service.send(listener, robotId, message);
+        MessageBundle bundle = buildMessage(run, envVars, listener, robotId);
+        return service.send(listener, robotId, bundle.ctx, bundle.intent, bundle.payload);
     }
 
-    private MessageModel buildMessage(Run<?, ?> run, EnvVars envVars, TaskListener listener, String robotId) {
+    /** Assembled message parts produced by {@link #buildMessage}. */
+    record MessageBundle(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
+    }
+
+    /**
+     * Assembles the shared context, cross-platform intent and WeCom payload for a run.
+     *
+     * @param run      build run
+     * @param envVars  environment variables
+     * @param listener task listener
+     * @param robotId  resolved robot id
+     * @return assembled message bundle
+     */
+    MessageBundle buildMessage(Run<?, ?> run, EnvVars envVars, TaskListener listener, String robotId) {
         NoticeOccasionEnum noticeOccasion = NoticeOccasionEnum.getNoticeOccasion(run.getResult());
         Locale locale = MessageLocaleResolver.resolveForRobotId(robotId);
+        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         String expandedText = envVars.expand(Utils.join(text));
         String jobUrl = rootPath + run.getUrl();
-        RunUser executor = RunUser.getExecutor(run, listener);
-
         List<Button> resolvedButtons = expandButtons(envVars, buttons);
         if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type)) {
             resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);
         }
-
-        return MessageModel.builder()
+        MessageIntent intent = MessageIntent.builder()
                 .type(type)
                 .statusType(noticeOccasion.buildStatus())
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(expandedText)
-                .additionalContent(expandedText)
-                .projectName(run.getParent().getFullDisplayName())
-                .projectUrl(run.getParent().getAbsoluteUrl())
-                .jobName(run.getDisplayName())
-                .jobUrl(jobUrl)
-                .duration(run.getDurationString())
-                .executorName(executor.getName())
-                .locale(locale)
                 .messageUrl(expandNullable(envVars, messageUrl))
                 .picUrl(expandNullable(envVars, picUrl))
                 .topImg(buildImg(envVars, topImg))
@@ -217,6 +222,8 @@ public class WechatWorkStep extends AbstractStep {
                 .atAll(atAll)
                 .atUserIds(expandAts(envVars))
                 .build();
+        WeComPayload payload = WeComPayload.builder().additionalContent(expandedText).build();
+        return new MessageBundle(ctx, intent, payload);
     }
 
     private Set<String> expandAts(EnvVars envVars) {

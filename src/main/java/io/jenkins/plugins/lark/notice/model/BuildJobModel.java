@@ -5,6 +5,11 @@ import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter;
 import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter.BuildMessageLineValues;
 import io.jenkins.plugins.lark.notice.tools.Utils;
+import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
+import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -128,32 +133,47 @@ public class BuildJobModel {
     }
 
     /**
-     * Prepares a {@link MessageModel.MessageModelBuilder} instance with pre-populated fields based on the build job details.
-     * This builder can then be used to further customize and create a {@link MessageModel} instance for messaging purposes.
+     * Builds a default interactive-card {@link MessageIntent} pre-populated from this build job.
      *
-     * @return A {@link MessageModel.MessageModelBuilder} instance with pre-populated fields.
+     * @param locale locale used for default button labels
+     * @return pre-populated card rendering intent
      */
-    public MessageModel.MessageModelBuilder messageModelBuilder() {
-        return messageModelBuilder(Locale.getDefault());
+    public MessageIntent buildCardIntent(Locale locale) {
+        return MessageIntent.builder().type(CARD).statusType(statusType)
+                .buttons(Utils.createDefaultButtons(jobUrl, locale)).title(title)
+                .build();
     }
 
     /**
-     * Prepares a message builder using the provided locale for default button labels.
+     * Builds the shared {@link BuildContext} from this build job.
      *
-     * @param locale locale to render default button labels with
-     * @return pre-populated message builder
+     * @param locale locale carried into the context
+     * @return build context
      */
-    public MessageModel.MessageModelBuilder messageModelBuilder(Locale locale) {
-        return MessageModel.builder().type(CARD).statusType(statusType)
-                .buttons(Utils.createDefaultButtons(jobUrl, locale)).title(title)
-                .locale(locale)
-                .projectName(projectName)
-                .projectUrl(projectUrl)
-                .jobName(jobName)
-                .jobUrl(jobUrl)
-                .duration(duration)
+    public BuildContext buildContext(Locale locale) {
+        return BuildContext.builder()
+                .projectName(projectName).projectUrl(projectUrl)
+                .jobName(jobName).jobUrl(jobUrl)
+                .statusType(statusType).duration(duration)
                 .executorName(executorName)
-                .additionalContent(content);
+                .executorMobile(executorMobile).executorOpenId(executorOpenId)
+                .locale(locale).build();
     }
 
+    /**
+     * Creates the platform-specific payload for a card message.
+     *
+     * @param protocol target robot protocol
+     * @return platform payload for the protocol
+     */
+    public PlatformPayload cardPayload(RobotProtocolType protocol) {
+        if (protocol == null) {
+            throw new IllegalArgumentException("protocol must not be null");
+        }
+        return switch (protocol) {
+            case LARK_COMPATIBLE -> LarkPayload.builder().build();
+            case DING_TALK -> DingPayload.builder().build();
+            case WECHAT_WORK -> WeComPayload.builder().additionalContent(content).build();
+        };
+    }
 }

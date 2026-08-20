@@ -1,7 +1,9 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.wechat.WechatWorkMarkdownMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.wechat.WechatWorkTemplateCardMessage;
@@ -14,75 +16,47 @@ import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.LF;
 
 /**
  * WeCom implementation for sending group robot messages.
+ *
+ * @author xm.z
  */
 @Slf4j
-public class WechatWorkMessageSender extends AbstractMessageSender {
+public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload> {
 
     public WechatWorkMessageSender(RobotConfigModel robotConfig) {
         super(robotConfig);
     }
 
-    /**
-     * Sends a text message.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendText(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        WechatWorkTextMessage message = WechatWorkTextMessage.build(msg.getAt(), text);
+    public SendResult sendText(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        WechatWorkTextMessage message = WechatWorkTextMessage.build(intent.getAt(), text);
         return sendMessage(JsonUtils.toJson(message));
     }
 
-    /**
-     * Sends a markdown message.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendMarkdown(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        WechatWorkMarkdownMessage message = WechatWorkMarkdownMessage.build(msg.getAt(), withTitle(msg.getTitle(), text));
+    public SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        WechatWorkMarkdownMessage message = WechatWorkMarkdownMessage.build(intent.getAt(), withTitle(intent.getTitle(), text));
         return sendMessage(JsonUtils.toJson(message));
     }
 
-    /**
-     * Sends a WeCom news-notice template card for the plugin's default card model.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendCard(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        WechatWorkTemplateCardMessage message = WechatWorkTemplateCardMessage.build(msg, text);
+    public SendResult sendCard(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        WechatWorkTemplateCardMessage message = WechatWorkTemplateCardMessage.build(ctx, intent, payload, text);
         return sendMessage(JsonUtils.toJson(message));
     }
 
-    /**
-     * WeCom group robots do not support the plugin's link message model. Send a markdown fallback.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendLink(MessageModel msg) {
+    public SendResult sendLink(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
         log.debug("WeCom does not support link messages; falling back to markdown");
-        return sendMarkdown(msg);
+        return sendMarkdown(ctx, intent, payload);
     }
 
-    /**
-     * WeCom group robots do not support the plugin's rich post model. Send a markdown fallback.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendPost(MessageModel msg) {
+    public SendResult sendPost(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
         log.debug("WeCom does not support post messages; falling back to markdown");
-        return sendMarkdown(msg);
+        return sendMarkdown(ctx, intent, payload);
     }
 
     private static String withTitle(String title, String text) {

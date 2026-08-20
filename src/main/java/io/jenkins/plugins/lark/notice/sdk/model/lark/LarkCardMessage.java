@@ -1,6 +1,7 @@
 package io.jenkins.plugins.lark.notice.sdk.model.lark;
 
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.builder.LarkCardBuilder;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Card;
 import lombok.Data;
@@ -22,19 +23,24 @@ public class LarkCardMessage extends BaseLarkMessage {
         setMsgType("interactive");
     }
 
-    public static LarkCardMessage build(MessageModel msg) {
-        String markdownContent = addAtInfo(msg.getText(), msg.getAt());
-
-        Card card = new LarkCardBuilder()
-                .withHeader(msg.obtainHeaderTemplate(), msg.getTitle())
-                .withImage(msg.getTopImg())
+    /**
+     * Builds a default Lark interactive card from the layered intent + payload.
+     *
+     * @param intent  cross-platform rendering intent
+     * @param payload Lark-specific payload (bottom image)
+     * @return assembled interactive card message
+     */
+    public static LarkCardMessage build(MessageIntent intent, LarkPayload payload) {
+        String markdownContent = addAtInfo(intent.getText(), intent.getAt());
+        LarkCardBuilder builder = new LarkCardBuilder()
+                .withHeader(intent.obtainHeaderTemplate(), intent.getTitle())
+                .withImage(intent.getTopImg())
                 .withMarkdown(markdownContent)
-                .withImage(msg.getBottomImg())
-                .withPersonList(msg.getAt())
-                .withButtons(msg.getButtons())
-                .build();
-
-        return new LarkCardMessage(card);
+                .withPersonList(intent.getAt())
+                .withButtons(intent.getButtons());
+        if (payload != null && payload.getBottomImg() != null) {
+            builder.withImage(payload.getBottomImg());
+        }
+        return new LarkCardMessage(builder.build());
     }
-
 }

@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.BuildJobModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.CardField;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -65,13 +68,15 @@ public class WechatWorkMessageSenderTest {
         robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
         WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
 
-        MessageModel message = MessageModel.builder()
+        MessageIntent intent = MessageIntent.builder()
                 .text("hello")
                 .atAll(false)
                 .atUserIds(Set.of("13800138000", "zhangsan"))
                 .build();
+        BuildContext ctx = BuildContext.builder().build();
+        WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = sender.sendText(message);
+        SendResult result = sender.sendText(ctx, intent, payload);
 
         assertTrue(result.isOk());
         assertEquals(requestBody.get(), result.getRequestBody());
@@ -88,17 +93,11 @@ public class WechatWorkMessageSenderTest {
         robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
         WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
 
-        MessageModel message = MessageModel.builder()
+        MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Build Notice")
                 .text("build ok")
-                .projectName("Demo Project")
-                .projectUrl("https://jenkins.example/job/demo/")
-                .jobName("#1")
-                .jobUrl("https://jenkins.example/job/demo/1/")
                 .statusType(BuildStatusEnum.SUCCESS)
-                .duration("1 sec")
-                .executorName("xm.z")
                 .buttons(List.of(
                         new Button("Changes", "https://jenkins.example/job/demo/1/changes", "primary_filled"),
                         new Button("Console", "https://jenkins.example/job/demo/1/console", "default")
@@ -106,8 +105,19 @@ public class WechatWorkMessageSenderTest {
                 .atAll(false)
                 .atUserIds(Set.of("zhangsan"))
                 .build();
+        BuildContext ctx = BuildContext.builder()
+                .projectName("Demo Project")
+                .projectUrl("https://jenkins.example/job/demo/")
+                .jobName("#1")
+                .jobUrl("https://jenkins.example/job/demo/1/")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .duration("1 sec")
+                .executorName("xm.z")
+                .locale(Locale.US)
+                .build();
+        WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, message, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
 
         assertTrue(result.isOk());
         JsonNode root = JsonUtils.readTree(requestBody.get());
@@ -136,6 +146,101 @@ public class WechatWorkMessageSenderTest {
         assertEquals("https://jenkins.example/job/demo/1/changes", card.path("card_action").path("url").asText());
         assertEquals("Changes", card.path("jump_list").get(0).path("title").asText());
         assertEquals("Console", card.path("jump_list").get(1).path("title").asText());
+        // Structured build rows are present, so the vertical text block must be omitted.
+        assertTrue(card.path("vertical_content_list").isMissingNode() || card.path("vertical_content_list").isNull());
+    }
+
+    @Test
+    public void cardWithAdditionalContentShouldRenderVerticalBlock() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        MessageIntent intent = MessageIntent.builder()
+                .type(MsgTypeEnum.CARD)
+                .title("Build Notice")
+                .text("build ok")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .build();
+        BuildContext ctx = BuildContext.builder()
+                .projectName("Demo Project")
+                .jobName("#1")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .duration("1 sec")
+                .executorName("xm.z")
+                .locale(Locale.US)
+                .build();
+        WeComPayload payload = WeComPayload.builder().additionalContent("custom release notes").build();
+
+        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+
+        assertTrue(result.isOk());
+        JsonNode card = JsonUtils.readTree(requestBody.get()).path("template_card");
+        JsonNode vertical = card.path("vertical_content_list");
+        assertFalse(vertical.isMissingNode());
+        assertEquals("Build Notice", vertical.get(0).path("title").asText());
+        assertEquals("custom release notes", vertical.get(0).path("desc").asText());
+    }
+
+    @Test
+    public void cardWithCustomCardFieldsShouldOverrideDefaultRows() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        MessageIntent intent = MessageIntent.builder()
+                .type(MsgTypeEnum.CARD)
+                .title("Release")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .build();
+        BuildContext ctx = BuildContext.builder()
+                .projectName("Ignored")
+                .jobName("Ignored")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .locale(Locale.US)
+                .build();
+        WeComPayload payload = WeComPayload.builder()
+                .cardFields(List.of(
+                        CardField.builder().keyname("版本").value("1.2.0").build(),
+                        CardField.builder().keyname("发布单").value("详情").url("https://example.com/release/1").build()))
+                .build();
+
+        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+
+        assertTrue(result.isOk());
+        JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
+        assertEquals(2, rows.size());
+        assertEquals("版本", rows.get(0).path("keyname").asText());
+        assertEquals("1.2.0", rows.get(0).path("value").asText());
+        assertEquals("发布单", rows.get(1).path("keyname").asText());
+        assertEquals("详情", rows.get(1).path("value").asText());
+        assertEquals("https://example.com/release/1", rows.get(1).path("url").asText());
+    }
+
+    @Test
+    public void cardImageShouldUsePicUrlWhenProvided() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        String customImage = "https://cdn.example.com/build-banner.png";
+        MessageIntent intent = MessageIntent.builder()
+                .type(MsgTypeEnum.CARD)
+                .title("Build Notice")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .picUrl(customImage)
+                .build();
+        BuildContext ctx = BuildContext.builder().locale(Locale.US).build();
+        WeComPayload payload = WeComPayload.builder().build();
+
+        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+
+        assertTrue(result.isOk());
+        JsonNode cardImage = JsonUtils.readTree(requestBody.get()).path("template_card").path("card_image");
+        assertEquals(customImage, cardImage.path("url").asText());
     }
 
     @Test

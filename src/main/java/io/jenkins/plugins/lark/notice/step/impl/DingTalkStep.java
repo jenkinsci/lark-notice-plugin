@@ -8,7 +8,9 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.step.AbstractStep;
@@ -212,19 +214,22 @@ public class DingTalkStep extends AbstractStep {
             resolvedButtons = Utils.createDefaultButtons(jobUrl);
         }
 
-        MessageModel message = MessageModel.builder().type(type)
+        MessageIntent intent = MessageIntent.builder().type(type)
                 .statusType(noticeOccasion.buildStatus())
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(envVars.expand(Utils.join(text))).buttons(resolvedButtons)
                 .messageUrl(envVars.expand(messageUrl))
                 .picUrl(envVars.expand(picUrl))
+                .atAll(atAll).atUserIds(ats)
+                .build();
+        DingPayload payload = DingPayload.builder()
                 .singleTitle(envVars.expand(singleTitle))
                 .singleUrl(envVars.expand(singleUrl))
                 .btnOrientation(isVerticalButton() ? "0" : "1")
-                .atAll(atAll).atUserIds(ats)
                 .build();
+        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), java.util.Locale.getDefault());
 
-        return service.send(listener, envVars.expand(robot), message);
+        return service.send(listener, envVars.expand(robot), ctx, intent, payload);
     }
 
     @Extension

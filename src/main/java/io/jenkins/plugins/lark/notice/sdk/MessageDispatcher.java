@@ -6,22 +6,24 @@ import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkRetryConfig;
 import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.logging.NoticeLog;
 import io.jenkins.plugins.lark.notice.logging.NoticeLogKey;
 import io.jenkins.plugins.lark.notice.logging.NoticeTrace;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 
 /**
- * Responsible for dispatching messages to specified robots on the Lark platform.
+ * Dispatches a layered {@link MessageIntent} + {@link PlatformPayload} to the platform sender
+ * resolved for a robot, routing the chosen {@link MsgTypeEnum} to the matching {@code sendX}
+ * method. Platforms only implement the types they support; unsupported types yield a failure.
  *
  * @author xm.z
  */
 public class MessageDispatcher {
 
-    /**
-     * The single instance of the MessageDispatcher, ensuring that only one instance of this class exists.
-     */
     private static final MessageDispatcher INSTANCE = new MessageDispatcher();
 
     private final MessageSenderRegistry senderRegistry;
@@ -34,60 +36,54 @@ public class MessageDispatcher {
         this.senderRegistry = senderRegistry;
     }
 
-    /**
-     * Provides access to the single instance of MessageDispatcher.
-     *
-     * @return the single instance of MessageDispatcher.
-     */
     public static MessageDispatcher getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Sends a message to a specified Lark robot using its ID.
-     * This method determines the appropriate MessageSender for the robot and
-     * delegates the message sending operation to it. If the robot ID is not recognized,
-     * or if the message type is not specified, it returns a failure result.
+     * Resolves a sender for the robot and dispatches the message.
      *
-     * @param listener The task listener
-     * @param robotId  The ID of the Lark robot to which the message should be sent.
-     * @param msg      The message to be sent, encapsulated in a MessageModel object.
-     * @return A SendResult object representing the outcome of the send operation.
-     * This includes status codes and messages indicating success or failure.
+     * @param listener task listener
+     * @param robotId  target robot id
+     * @param ctx      shared build context
+     * @param intent   cross-platform rendering intent
+     * @param payload  platform-specific payload (must match the robot's protocol)
+     * @return send result
      */
-    public SendResult send(TaskListener listener, String robotId, MessageModel msg) {
-        NoticeLog.trace(listener, NoticeTrace.DISPATCHER_SEND_START,
-                NoticeLog.field(NoticeLogKey.ROBOT_ID, robotId),
-                NoticeLog.field(NoticeLogKey.MESSAGE_TYPE, msg == null || msg.getType() == null ? "<null>" : msg.getType().name()));
-
-        MessageSender sender = senderRegistry.resolve(robotId);
-        if (sender == null) {
-            return fail(listener, robotId, null, String.format(Messages.dispatcher_error_robot_not_exist(), robotId));
-        }
-
-        return send(listener, robotId, msg, sender);
+    public SendResult send(TaskListener listener, String robotId, BuildContext ctx,
+                           MessageIntent intent, PlatformPayload payload) {
+        MessageSender<?> sender = senderRegistry.resolve(robotId);
+        return send(listener, robotId, ctx, intent, payload, sender);
     }
 
     /**
-     * Sends a message using a provided sender, bypassing registry resolution.
+     * Dispatches using a pre-resolved sender, bypassing registry resolution.
      *
      * @param listener task listener
-     * @param robotId  robot identifier for logging
-     * @param msg      message payload
-     * @param sender   prepared message sender
+     * @param robotId  robot id for logging
+     * @param ctx      shared build context
+     * @param intent   cross-platform rendering intent
+     * @param payload  platform-specific payload
+     * @param sender   prepared sender
      * @return send result
      */
-    public SendResult send(TaskListener listener, String robotId, MessageModel msg, MessageSender sender) {
+    public SendResult send(TaskListener listener, String robotId, BuildContext ctx,
+                           MessageIntent intent, PlatformPayload payload, MessageSender<?> sender) {
         if (sender == null) {
             return fail(listener, robotId, null, String.format(Messages.dispatcher_error_robot_not_exist(), robotId));
         }
-        if (msg == null) {
+        if (intent == null) {
             return fail(listener, robotId, null, Messages.dispatcher_error_message_missing());
         }
-
-        MsgTypeEnum type = msg.getType();
+        MsgTypeEnum type = intent.getType();
         if (type == null) {
             return fail(listener, robotId, null, Messages.dispatcher_error_message_type_missing());
+        }
+
+        RobotProtocolType protocol = resolveProtocol(robotId);
+        SendResult unsupported = validateSupport(listener, robotId, type, protocol);
+        if (unsupported != null) {
+            return unsupported;
         }
 
         if (robotId != null) {
@@ -99,7 +95,7 @@ public class MessageDispatcher {
         int attempt = 1;
         SendResult sendResult = null;
         while (true) {
-            sendResult = type.send(sender, msg);
+            sendResult = dispatch(sender, type, ctx, intent, payload);
             if (sendResult != null && sendResult.isOk()) {
                 break;
             }
@@ -141,11 +137,42 @@ public class MessageDispatcher {
     }
 
     /**
-     * Resolves the retry policy for the given robot id, falling back to defaults when absent.
-     *
-     * @param robotId robot identifier, may be null for ad-hoc sends
-     * @return resolved retry policy
+     * Routes a message type to the matching {@code sendX} method on the concrete sender.
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private SendResult dispatch(MessageSender sender, MsgTypeEnum type, BuildContext ctx,
+                               MessageIntent intent, PlatformPayload payload) {
+        return switch (type) {
+            case TEXT -> sender.sendText(ctx, intent, payload);
+            case MARKDOWN -> sender.sendMarkdown(ctx, intent, payload);
+            case IMAGE -> sender.sendImage(ctx, intent, payload);
+            case SHARE_CHAT -> sender.sendShareChat(ctx, intent, payload);
+            case POST -> sender.sendPost(ctx, intent, payload);
+            case LINK -> sender.sendLink(ctx, intent, payload);
+            case CARD -> sender.sendCard(ctx, intent, payload);
+        };
+    }
+
+    /**
+     * Returns a failure result when the type is not supported by the resolved protocol, otherwise null.
+     */
+    private SendResult validateSupport(TaskListener listener, String robotId, MsgTypeEnum type, RobotProtocolType protocol) {
+        if (protocol != null && !protocol.supports(type)) {
+            return fail(listener, robotId, type,
+                    String.format("Message type %s is not supported by %s robots.", type, protocol));
+        }
+        return null;
+    }
+
+    private RobotProtocolType resolveProtocol(String robotId) {
+        if (robotId == null) {
+            return null;
+        }
+        return LarkGlobalConfig.getRobot(robotId)
+                .map(LarkRobotConfig::getProtocolType)
+                .orElse(null);
+    }
+
     RetryPolicy resolveRetryPolicy(String robotId) {
         if (robotId == null) {
             return RetryPolicy.from(LarkRetryConfig.defaultConfig());
@@ -156,9 +183,6 @@ public class MessageDispatcher {
                 .orElseGet(() -> RetryPolicy.from(LarkRetryConfig.defaultConfig()));
     }
 
-    /**
-     * Builds a failed result and emits a structured end-event for easier troubleshooting.
-     */
     private SendResult fail(TaskListener listener, String robotId, MsgTypeEnum msgType, String message) {
         SendResult failed = SendResult.fail(message);
         NoticeLog.trace(listener, NoticeTrace.DISPATCHER_SEND_FINISH,

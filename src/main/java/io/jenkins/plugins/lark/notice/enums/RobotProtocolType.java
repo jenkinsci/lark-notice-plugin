@@ -2,6 +2,9 @@ package io.jenkins.plugins.lark.notice.enums;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * High-level robot protocol families supported by the plugin.
  *
@@ -51,6 +54,31 @@ public enum RobotProtocolType {
     }
 
     /**
+     * Returns the message types supported by this protocol family.
+     *
+     * @return unmodifiable set of supported message types
+     */
+    public Set<MsgTypeEnum> supportedTypes() {
+        return switch (this) {
+            case LARK_COMPATIBLE -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.IMAGE, MsgTypeEnum.SHARE_CHAT,
+                    MsgTypeEnum.POST, MsgTypeEnum.MARKDOWN, MsgTypeEnum.CARD);
+            case DING_TALK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK, MsgTypeEnum.CARD);
+            case WECHAT_WORK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK,
+                    MsgTypeEnum.POST, MsgTypeEnum.CARD);
+        };
+    }
+
+    /**
+     * Reports whether a message type is supported by this protocol family.
+     *
+     * @param type message type to check
+     * @return {@code true} when supported
+     */
+    public boolean supports(MsgTypeEnum type) {
+        return type != null && supportedTypes().contains(type);
+    }
+
+    /**
      * Maps the protocol family to the runtime sender type.
      *
      * @return runtime sender type
@@ -60,6 +88,23 @@ public enum RobotProtocolType {
             case DING_TALK -> RobotType.DING_TALK;
             case WECHAT_WORK -> RobotType.WECHAT_WORK;
             case LARK_COMPATIBLE -> RobotType.LARK;
+        };
+    }
+
+    /**
+     * Maps a runtime robot type back to its protocol family.
+     *
+     * @param robotType runtime robot type
+     * @return matching protocol family
+     */
+    public static RobotProtocolType fromRobotType(RobotType robotType) {
+        if (robotType == null) {
+            return null;
+        }
+        return switch (robotType) {
+            case LARK -> LARK_COMPATIBLE;
+            case DING_TALK -> DING_TALK;
+            case WECHAT_WORK -> WECHAT_WORK;
         };
     }
 }

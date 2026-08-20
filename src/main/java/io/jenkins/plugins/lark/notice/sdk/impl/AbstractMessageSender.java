@@ -4,6 +4,7 @@ import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.sdk.HttpClientFactory;
 import io.jenkins.plugins.lark.notice.sdk.MessageSender;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import lombok.Getter;
@@ -26,7 +27,7 @@ import java.util.Optional;
  * @author xm.z
  */
 @Slf4j
-public abstract class AbstractMessageSender implements MessageSender {
+public abstract class AbstractMessageSender<T extends PlatformPayload> implements MessageSender<T> {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(3);
 

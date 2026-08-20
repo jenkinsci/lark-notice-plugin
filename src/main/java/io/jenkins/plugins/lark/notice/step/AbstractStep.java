@@ -4,9 +4,12 @@ import com.google.common.collect.ImmutableSet;
 import hudson.EnvVars;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.RunUser;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -100,6 +103,31 @@ public abstract class AbstractStep extends Step {
         return buttons.stream().map(item ->
                 new Button(envVars.expand(item.getTitle()), envVars.expand(item.getUrl()), item.getType())
         ).collect(Collectors.toList());
+    }
+
+    /**
+     * Builds the shared {@link BuildContext} for a run.
+     *
+     * @param run      build run
+     * @param listener task listener
+     * @param status   build status
+     * @param locale   locale
+     * @return build context
+     */
+    protected BuildContext buildContext(Run<?, ?> run, TaskListener listener, BuildStatusEnum status, java.util.Locale locale) {
+        RunUser executor = RunUser.getExecutor(run, listener);
+        String jobUrl = rootPath + run.getUrl();
+        return BuildContext.builder()
+                .projectName(run.getParent().getFullDisplayName())
+                .projectUrl(run.getParent().getAbsoluteUrl())
+                .jobName(run.getDisplayName())
+                .jobUrl(jobUrl)
+                .statusType(status)
+                .duration(run.getDurationString())
+                .executorName(executor.getName())
+                .executorMobile(executor.getMobile())
+                .executorOpenId(executor.getOpenId())
+                .locale(locale).build();
     }
 
     /**

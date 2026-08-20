@@ -11,13 +11,12 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.step.impl.WechatWorkStep.MessageBundle;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -51,24 +50,21 @@ public class WechatWorkStepTest {
             WechatWorkStep step = new WechatWorkStep("robot-wecom", MsgTypeEnum.CARD);
             step.setText(List.of("line one", "line two"));
 
-            Method buildMessage = WechatWorkStep.class.getDeclaredMethod(
-                    "buildMessage", hudson.model.Run.class, EnvVars.class, TaskListener.class, String.class);
-            buildMessage.setAccessible(true);
-            MessageModel message = (MessageModel) buildMessage.invoke(
-                    step, build, new EnvVars(), TaskListener.NULL, "robot-wecom");
+            WechatWorkStep.MessageBundle bundle = step.buildMessage(
+                    build, new EnvVars(), TaskListener.NULL, "robot-wecom");
 
-            assertNotNull(message);
-            assertEquals("wecom-pipeline-step", message.getProjectName());
-            assertEquals("#1", message.getJobName());
-            assertEquals("line one\nline two", message.getText());
-            assertEquals("line one\nline two", message.getAdditionalContent());
-            assertEquals(Locale.US, message.getLocale());
-            assertTrue(message.getJobUrl().endsWith("/job/wecom-pipeline-step/1/"));
-            assertNotNull(message.getButtons());
-            assertEquals(2, message.getButtons().size());
-            assertDefaultButton(message.getButtons().get(0), NoticeI18n.buildMessageButtonChangeLog(Locale.US), "/changes");
-            assertDefaultButton(message.getButtons().get(1), NoticeI18n.buildMessageButtonConsole(Locale.US), "/console");
-            assertFalse(message.isAtAll());
+            assertNotNull(bundle);
+            assertEquals("wecom-pipeline-step", bundle.ctx().getProjectName());
+            assertEquals("#1", bundle.ctx().getJobName());
+            assertEquals("line one\nline two", bundle.intent().getText());
+            assertEquals("line one\nline two", bundle.payload().getAdditionalContent());
+            assertEquals(Locale.US, bundle.ctx().getLocale());
+            assertTrue(bundle.ctx().getJobUrl().endsWith("/job/wecom-pipeline-step/1/"));
+            assertNotNull(bundle.intent().getButtons());
+            assertEquals(2, bundle.intent().getButtons().size());
+            assertDefaultButton(bundle.intent().getButtons().get(0), NoticeI18n.buildMessageButtonChangeLog(Locale.US), "/changes");
+            assertDefaultButton(bundle.intent().getButtons().get(1), NoticeI18n.buildMessageButtonConsole(Locale.US), "/console");
+            assertFalse(bundle.intent().isAtAll());
         } finally {
             Locale.setDefault(previous);
         }

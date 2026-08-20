@@ -2,7 +2,10 @@ package io.jenkins.plugins.lark.notice.sdk;
 
 import io.jenkins.plugins.lark.notice.config.LarkRetryConfig;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import org.junit.Test;
 
@@ -17,31 +20,38 @@ import static org.junit.Assert.assertTrue;
  */
 public class MessageDispatcherRetryTest {
 
+    private static MessageIntent textIntent() {
+        return MessageIntent.builder().type(MsgTypeEnum.TEXT).text("hello").build();
+    }
+
+    private static BuildContext context() {
+        return BuildContext.builder().build();
+    }
+
+    private static PlatformPayload payload() {
+        return WeComPayload.builder().build();
+    }
+
     @Test
     public void shouldRetryUntilSuccess() {
         RetryPolicy policy = RetryPolicy.from(new LarkRetryConfig(true, 3, 0, 0, 1.0, 0.0));
         TestDispatcher dispatcher = new TestDispatcher(policy);
 
         AtomicInteger attempts = new AtomicInteger();
-        MessageSender sender = new MessageSender() {
+        MessageSender<PlatformPayload> sender = new MessageSender<>() {
             @Override
-            public SendResult sendText(MessageModel msg) {
+            public SendResult sendText(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
                 int count = attempts.incrementAndGet();
                 return count < 3 ? SendResult.fail("fail") : new SendResult(0, "ok", null);
             }
 
             @Override
-            public SendResult sendMarkdown(MessageModel msg) {
-                return sendText(msg);
+            public SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
+                return sendText(ctx, intent, payload);
             }
         };
 
-        MessageModel message = MessageModel.builder()
-                .type(MsgTypeEnum.TEXT)
-                .text("hello")
-                .build();
-
-        SendResult result = dispatcher.send(null, null, message, sender);
+        SendResult result = dispatcher.send(null, null, context(), textIntent(), payload(), sender);
         assertTrue(result.isOk());
         assertEquals(3, attempts.get());
     }
@@ -52,25 +62,20 @@ public class MessageDispatcherRetryTest {
         TestDispatcher dispatcher = new TestDispatcher(policy);
 
         AtomicInteger attempts = new AtomicInteger();
-        MessageSender sender = new MessageSender() {
+        MessageSender<PlatformPayload> sender = new MessageSender<>() {
             @Override
-            public SendResult sendText(MessageModel msg) {
+            public SendResult sendText(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
                 attempts.incrementAndGet();
                 return SendResult.fail("fail");
             }
 
             @Override
-            public SendResult sendMarkdown(MessageModel msg) {
-                return sendText(msg);
+            public SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
+                return sendText(ctx, intent, payload);
             }
         };
 
-        MessageModel message = MessageModel.builder()
-                .type(MsgTypeEnum.TEXT)
-                .text("hello")
-                .build();
-
-        SendResult result = dispatcher.send(null, null, message, sender);
+        SendResult result = dispatcher.send(null, null, context(), textIntent(), payload(), sender);
         assertFalse(result.isOk());
         assertEquals(2, attempts.get());
     }

@@ -9,7 +9,9 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement;
@@ -185,14 +187,19 @@ public class LarkStep extends AbstractStep {
             resolvedButtons = Utils.createDefaultButtons(jobUrl);
         }
 
-        MessageModel message = MessageModel.builder().type(type)
+        MessageIntent intent = MessageIntent.builder().type(type)
                 .statusType(noticeOccasion.buildStatus())
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(envVars.expand(buildText())).buttons(resolvedButtons)
-                .topImg(buildImg(envVars, topImg)).bottomImg(buildImg(envVars, bottomImg))
+                .topImg(buildImg(envVars, topImg))
+                .build();
+        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), java.util.Locale.getDefault());
+        LarkPayload payload = LarkPayload.builder()
+                .imageKey(imageKey).shareChatId(shareChatId).post(post)
+                .bottomImg(buildImg(envVars, bottomImg))
                 .build();
 
-        return service.send(listener, envVars.expand(robot), message);
+        return service.send(listener, envVars.expand(robot), ctx, intent, payload);
     }
 
     /**

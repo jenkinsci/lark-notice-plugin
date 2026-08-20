@@ -1,7 +1,9 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingCardMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingLinkMessage;
@@ -15,11 +17,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * DingTask implementation for sending Lark messages.
+ * DingTalk implementation for sending group robot messages.
  *
  * @author xm.z
  */
-public class DingMessageSender extends AbstractMessageSender {
+public class DingMessageSender extends AbstractMessageSender<DingPayload> {
 
     public DingMessageSender(RobotConfigModel robotConfig) {
         super(robotConfig);
@@ -37,66 +39,42 @@ public class DingMessageSender extends AbstractMessageSender {
         return headers;
     }
 
-    /**
-     * Sends a text message.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendText(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        DingTextMessage message = DingTextMessage.build(msg.getAt(), text);
+    public SendResult sendText(BuildContext ctx, MessageIntent intent, DingPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        DingTextMessage message = DingTextMessage.build(intent.getAt(), text);
         return sendMessage(JsonUtils.toJson(message), signHeaders());
     }
 
-    /**
-     * Sends a markdown message.
-     *
-     * @param msg Message details.
-     * @return Result of the send operation.
-     */
     @Override
-    public SendResult sendMarkdown(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        DingMdMessage message = DingMdMessage.build(msg.getAt(), msg.getTitle(), text);
+    public SendResult sendMarkdown(BuildContext ctx, MessageIntent intent, DingPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        DingMdMessage message = DingMdMessage.build(intent.getAt(), intent.getTitle(), text);
         return sendMessage(JsonUtils.toJson(message), signHeaders());
     }
 
-    /**
-     * Sends a link message.
-     *
-     * @param msg Message details.
-     * @return Failure result.
-     */
     @Override
-    public SendResult sendLink(MessageModel msg) {
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        DingLinkMessage message = DingLinkMessage.build(msg.getAt(), msg.getTitle(), text,
-                msg.getPicUrl(), msg.getMessageUrl());
+    public SendResult sendLink(BuildContext ctx, MessageIntent intent, DingPayload payload) {
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        DingLinkMessage message = DingLinkMessage.build(intent.getAt(), intent.getTitle(), text,
+                intent.getPicUrl(), intent.getMessageUrl());
         return sendMessage(JsonUtils.toJson(message), signHeaders());
     }
 
-    /**
-     * Sends a card message.
-     *
-     * @param msg Message details.
-     * @return Failure result.
-     */
     @Override
-    public SendResult sendCard(MessageModel msg) {
+    public SendResult sendCard(BuildContext ctx, MessageIntent intent, DingPayload payload) {
         DingCardMessage message;
-        String text = addKeyWord(msg.getText(), robotConfig.getKeys());
-        String singleTitle = msg.getSingleTitle();
+        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        String singleTitle = payload == null ? null : payload.getSingleTitle();
         if (StringUtils.isNotBlank(singleTitle)) {
-            message = DingCardMessage.build(msg.getAt(), msg.getTitle(), msg.getText(), singleTitle, msg.getSingleUrl());
+            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), intent.getText(), singleTitle, payload.getSingleUrl());
         } else {
-            List<DingCardMessage.Button> buttons = CollectionUtils.isEmpty(msg.getButtons()) ? null : msg.getButtons().stream()
+            List<DingCardMessage.Button> buttons = CollectionUtils.isEmpty(intent.getButtons()) ? null : intent.getButtons().stream()
                     .map(button -> new DingCardMessage.Button(button.getText(), button.getUrl()))
                     .collect(Collectors.toList());
-            message = DingCardMessage.build(msg.getAt(), msg.getTitle(), text, msg.getBtnOrientation(), buttons);
+            String btnOrientation = payload == null ? null : payload.getBtnOrientation();
+            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, btnOrientation, buttons);
         }
         return sendMessage(JsonUtils.toJson(message), signHeaders());
     }
-
 }

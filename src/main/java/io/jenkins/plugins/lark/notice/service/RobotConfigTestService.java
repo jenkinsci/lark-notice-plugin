@@ -6,8 +6,10 @@ import io.jenkins.plugins.lark.notice.config.*;
 import io.jenkins.plugins.lark.notice.enums.*;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
 import io.jenkins.plugins.lark.notice.model.BuildJobModel;
-import io.jenkins.plugins.lark.notice.model.MessageModel;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.MessageSender;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
@@ -64,8 +66,15 @@ public final class RobotConfigTestService {
             RobotType robotType = robotTypeOpt.get();
 
             MessageSender sender = robotType.obtainInstance(RobotConfigModel.of(robotConfig, proxySelector));
+            Locale testLocale = MessageLocaleResolver.resolve(robotConfig);
+            BuildJobModel buildJobModel = buildTestJobModel(testLocale);
+            RobotProtocolType protocol = RobotProtocolType.fromRobotType(robotType);
+            MessageIntent intent = buildJobModel.buildCardIntent(testLocale).toBuilder()
+                    .text(buildJobModel.toMarkdown(robotType, testLocale)).atAll(false).build();
+            BuildContext buildCtx = buildJobModel.buildContext(testLocale);
+            PlatformPayload payload = buildJobModel.cardPayload(protocol);
             SendResult sendResult = Objects.requireNonNull(MessageDispatcher.getInstance()
-                    .send(null, robotConfig.getId(), buildTestMessage(robotType, MessageLocaleResolver.resolve(robotConfig)), sender), "sendResult");
+                    .send(null, robotConfig.getId(), buildCtx, intent, payload, sender), "sendResult");
             boolean ok = sendResult.isOk();
             String detail = sendResult.getMsg();
             String message = ok
@@ -96,7 +105,7 @@ public final class RobotConfigTestService {
                 .obtainProxySelector();
     }
 
-    private static MessageModel buildTestMessage(RobotType robotType, Locale locale) {
+    private static BuildJobModel buildTestJobModel(Locale locale) {
         String rootUrl = Jenkins.get().getRootUrl();
         String configureUrl = StringUtils.appendIfMissing(rootUrl, "/") + "configure";
         User user = Optional.ofNullable(User.current()).orElse(User.getUnknown());
@@ -108,8 +117,6 @@ public final class RobotConfigTestService {
                 .statusType(BuildStatusEnum.SUCCESS).duration("-")
                 .executorName(user.getDisplayName()).build();
 
-        return buildJobModel.messageModelBuilder(locale)
-                .text(buildJobModel.toMarkdown(robotType, locale))
-                .atAll(false).build();
+        return buildJobModel;
     }
 }
