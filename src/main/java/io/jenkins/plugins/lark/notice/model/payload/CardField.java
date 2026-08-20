@@ -1,10 +1,6 @@
 package io.jenkins.plugins.lark.notice.model.payload;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * One row of a WeCom {@code news_notice} template card's {@code horizontal_content_list}.
@@ -21,22 +17,34 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CardField {
 
-    /** Horizontal content type: plain text row. */
+    /**
+     * Horizontal content type: plain text row.
+     */
     public static final int TEXT_TYPE = 0;
 
-    /** Horizontal content type: jump row that opens {@link #url}. */
+    /**
+     * Horizontal content type: jump row that opens {@link #url}.
+     */
     public static final int LINK_TYPE = 1;
 
-    /** Row label, e.g. "任务名称". */
+    /**
+     * Row label, e.g. "任务名称".
+     */
     private String keyname;
 
-    /** Row value. */
+    /**
+     * Row value.
+     */
     private String value;
 
-    /** Jump URL. When blank the row is rendered as a plain text row. */
+    /**
+     * Jump URL. When blank the row is rendered as a plain text row.
+     */
     private String url;
 
-    /** Optional explicit type; when null it is derived from whether {@link #url} is set. */
+    /**
+     * Optional explicit type; when null it is derived from whether {@link #url} is set.
+     */
     private Integer type;
 
     /**

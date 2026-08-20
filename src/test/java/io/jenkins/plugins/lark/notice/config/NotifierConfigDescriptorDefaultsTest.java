@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests for default notifier config lists exposed by Jenkins descriptors.
@@ -26,6 +24,37 @@ public class NotifierConfigDescriptorDefaultsTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static LarkRobotConfig createRobot(String id) {
+        return new LarkRobotConfig(
+                id,
+                "Robot-" + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of()
+        );
+    }
+
+    private static LarkNotifierConfig createNotifierConfig(String robotId, boolean checked, boolean disabled, String title) {
+        return new LarkNotifierConfig(
+                false,
+                disabled,
+                checked,
+                robotId,
+                "Robot-" + robotId,
+                false,
+                "",
+                title,
+                "content",
+                "",
+                Set.of("START")
+        );
+    }
+
+    private static List<String> extractRobotIds(List<LarkNotifierConfig> configs) {
+        return configs.stream()
+                .map(LarkNotifierConfig::getRobotId)
+                .collect(Collectors.toList());
+    }
 
     @Before
     public void setUp() {
@@ -76,36 +105,5 @@ public class NotifierConfigDescriptorDefaultsTest {
         assertEquals("disabled", merged.get(1).getTitle());
         assertEquals(2, NotifierConfigService.filterEnabled(merged).size());
         assertEquals(List.of("robot-a"), extractRobotIds(NotifierConfigService.filterAvailable(merged)));
-    }
-
-    private static LarkRobotConfig createRobot(String id) {
-        return new LarkRobotConfig(
-                id,
-                "Robot-" + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of()
-        );
-    }
-
-    private static LarkNotifierConfig createNotifierConfig(String robotId, boolean checked, boolean disabled, String title) {
-        return new LarkNotifierConfig(
-                false,
-                disabled,
-                checked,
-                robotId,
-                "Robot-" + robotId,
-                false,
-                "",
-                title,
-                "content",
-                "",
-                Set.of("START")
-        );
-    }
-
-    private static List<String> extractRobotIds(List<LarkNotifierConfig> configs) {
-        return configs.stream()
-                .map(LarkNotifierConfig::getRobotId)
-                .collect(Collectors.toList());
     }
 }

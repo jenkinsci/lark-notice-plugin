@@ -54,6 +54,23 @@ public enum RobotProtocolType {
     }
 
     /**
+     * Maps a runtime robot type back to its protocol family.
+     *
+     * @param robotType runtime robot type
+     * @return matching protocol family
+     */
+    public static RobotProtocolType fromRobotType(RobotType robotType) {
+        if (robotType == null) {
+            return null;
+        }
+        return switch (robotType) {
+            case LARK -> LARK_COMPATIBLE;
+            case DING_TALK -> DING_TALK;
+            case WECHAT_WORK -> WECHAT_WORK;
+        };
+    }
+
+    /**
      * Returns the message types supported by this protocol family.
      *
      * @return unmodifiable set of supported message types
@@ -88,23 +105,6 @@ public enum RobotProtocolType {
             case DING_TALK -> RobotType.DING_TALK;
             case WECHAT_WORK -> RobotType.WECHAT_WORK;
             case LARK_COMPATIBLE -> RobotType.LARK;
-        };
-    }
-
-    /**
-     * Maps a runtime robot type back to its protocol family.
-     *
-     * @param robotType runtime robot type
-     * @return matching protocol family
-     */
-    public static RobotProtocolType fromRobotType(RobotType robotType) {
-        if (robotType == null) {
-            return null;
-        }
-        return switch (robotType) {
-            case LARK -> LARK_COMPATIBLE;
-            case DING_TALK -> DING_TALK;
-            case WECHAT_WORK -> WECHAT_WORK;
         };
     }
 }

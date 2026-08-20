@@ -190,46 +190,31 @@ public final class RobotWebhookResolver {
         }
     }
 
-    private static final class ParsedWebhook {
-
-        private final String scheme;
-
-        private final String authority;
-
-        private final String path;
-
-        private final boolean larkCompatible;
-
-        private ParsedWebhook(String scheme, String authority, String path, boolean larkCompatible) {
-            this.scheme = scheme;
-            this.authority = authority;
-            this.path = path;
-            this.larkCompatible = larkCompatible;
-        }
+    private record ParsedWebhook(String scheme, String authority, String path, boolean larkCompatible) {
 
         private static ParsedWebhook parse(String webhook) {
-            if (StringUtils.isBlank(webhook)) {
-                return null;
-            }
-            try {
-                URI uri = new URI(webhook.trim());
-                String scheme = StringUtils.defaultString(uri.getScheme());
-                String authority = StringUtils.defaultString(uri.getRawAuthority());
-                String path = StringUtils.defaultString(uri.getPath());
-                if (StringUtils.isAnyBlank(scheme, authority, path)) {
+                if (StringUtils.isBlank(webhook)) {
                     return null;
                 }
-                return new ParsedWebhook(
-                        scheme,
-                        authority,
-                        path,
-                        path.startsWith(LARK_WEBHOOK_PREFIX)
-                );
-            } catch (URISyntaxException ex) {
-                return null;
+                try {
+                    URI uri = new URI(webhook.trim());
+                    String scheme = StringUtils.defaultString(uri.getScheme());
+                    String authority = StringUtils.defaultString(uri.getRawAuthority());
+                    String path = StringUtils.defaultString(uri.getPath());
+                    if (StringUtils.isAnyBlank(scheme, authority, path)) {
+                        return null;
+                    }
+                    return new ParsedWebhook(
+                            scheme,
+                            authority,
+                            path,
+                            path.startsWith(LARK_WEBHOOK_PREFIX)
+                    );
+                } catch (URISyntaxException ex) {
+                    return null;
+                }
             }
         }
-    }
 
     /**
      * Bundle of resolved webhook settings.

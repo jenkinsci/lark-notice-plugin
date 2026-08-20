@@ -162,7 +162,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
     }
 
     private static List<VerticalContent> resolveVerticalContentList(BuildContext ctx, MessageIntent intent,
-                                                                      WeComPayload payload, String content) {
+                                                                    WeComPayload payload, String content) {
         if (StringUtils.isNotBlank(payload.getAdditionalContent())) {
             return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), payload.getAdditionalContent()));
         }

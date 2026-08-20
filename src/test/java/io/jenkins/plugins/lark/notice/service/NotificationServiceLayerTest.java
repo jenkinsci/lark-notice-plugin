@@ -2,16 +2,7 @@ package io.jenkins.plugins.lark.notice.service;
 
 import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.ParametersAction;
-import hudson.model.ParametersDefinitionProperty;
-import hudson.model.Result;
-import hudson.model.StringParameterValue;
-import hudson.model.StringParameterDefinition;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.tasks.Builder;
 import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkNotifier;
@@ -34,9 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Integration tests for service-layer components introduced by notification refactoring.
@@ -47,6 +36,31 @@ public class NotificationServiceLayerTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static LarkRobotConfig createRobot(String id) {
+        return new LarkRobotConfig(
+                id,
+                "Robot-" + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of()
+        );
+    }
+
+    private static LarkNotifierConfig createNotifierConfig(String robotId, boolean checked, boolean disabled) {
+        return new LarkNotifierConfig(
+                false,
+                disabled,
+                checked,
+                robotId,
+                "Robot-" + robotId,
+                false,
+                "",
+                "title",
+                "content",
+                "",
+                Set.of("START", "SUCCESS")
+        );
+    }
 
     @Before
     public void setUp() {
@@ -129,12 +143,12 @@ public class NotificationServiceLayerTest {
         project.addProperty(new ParametersDefinitionProperty(
                 new StringParameterDefinition(parameterName, "")));
         FreeStyleBuild firstBuild = project.scheduleBuild2(
-                0,
-                new ParametersAction(new StringParameterValue(parameterName, "run-one")))
+                        0,
+                        new ParametersAction(new StringParameterValue(parameterName, "run-one")))
                 .get();
         FreeStyleBuild secondBuild = project.scheduleBuild2(
-                0,
-                new ParametersAction(new StringParameterValue(parameterName, "run-two")))
+                        0,
+                        new ParametersAction(new StringParameterValue(parameterName, "run-two")))
                 .get();
 
         PipelineEnvContext.merge(firstBuild, new EnvVars(parameterName, "context-two"));
@@ -192,44 +206,13 @@ public class NotificationServiceLayerTest {
         assertEquals(Result.SUCCESS, build.getResult());
     }
 
-    private static LarkRobotConfig createRobot(String id) {
-        return new LarkRobotConfig(
-                id,
-                "Robot-" + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of()
-        );
-    }
-
-    private static LarkNotifierConfig createNotifierConfig(String robotId, boolean checked, boolean disabled) {
-        return new LarkNotifierConfig(
-                false,
-                disabled,
-                checked,
-                robotId,
-                "Robot-" + robotId,
-                false,
-                "",
-                "title",
-                "content",
-                "",
-                Set.of("START", "SUCCESS")
-        );
-    }
-
-    private static final class TestNotifierProvider implements LarkNotifierProvider {
-
-        private final List<LarkNotifierConfig> configs;
-
-        private TestNotifierProvider(List<LarkNotifierConfig> configs) {
-            this.configs = configs;
-        }
+    private record TestNotifierProvider(List<LarkNotifierConfig> configs) implements LarkNotifierProvider {
 
         @Override
-        public List<LarkNotifierConfig> getLarkNotifierConfigs() {
-            return configs;
+            public List<LarkNotifierConfig> getLarkNotifierConfigs() {
+                return configs;
+            }
         }
-    }
 
     private static final class FailureResultBuilder extends Builder {
 

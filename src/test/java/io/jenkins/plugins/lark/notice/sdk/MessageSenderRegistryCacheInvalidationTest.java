@@ -12,10 +12,7 @@ import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests cache invalidation behavior in {@link MessageSenderRegistry}.
@@ -24,6 +21,15 @@ public class MessageSenderRegistryCacheInvalidationTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static LarkRobotConfig createRobot(String id) {
+        return new LarkRobotConfig(
+                id,
+                "Robot-" + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of()
+        );
+    }
 
     @Before
     public void setUp() {
@@ -65,14 +71,5 @@ public class MessageSenderRegistryCacheInvalidationTest {
         assertThrows(UnsupportedOperationException.class, () -> robotConfigs.add(createRobot("robot-c")));
         assertEquals(1, LarkGlobalConfig.getInstance().getRobotConfigs().size());
         assertTrue(LarkGlobalConfig.getRobot("robot-a").isPresent());
-    }
-
-    private static LarkRobotConfig createRobot(String id) {
-        return new LarkRobotConfig(
-                id,
-                "Robot-" + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of()
-        );
     }
 }

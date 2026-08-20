@@ -14,6 +14,19 @@ import static org.junit.Assert.assertTrue;
 
 public class BuildJobModelI18nTest {
 
+    private static BuildJobModel createModel() {
+        return BuildJobModel.builder()
+                .title("title")
+                .projectName("Demo Project")
+                .projectUrl("https://example.com/project")
+                .jobName("#42")
+                .jobUrl("https://example.com/job/42")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .duration("1 sec")
+                .executorName("xm.z")
+                .build();
+    }
+
     @Test
     public void shouldResolveMarkdownLabelsByCurrentLocale() {
         Locale previous = Locale.getDefault();
@@ -72,18 +85,5 @@ public class BuildJobModelI18nTest {
         failureModel.setStatusType(BuildStatusEnum.FAILURE);
         String failureMarkdown = failureModel.toMarkdown(RobotType.WECHAT_WORK, Locale.US);
         assertTrue(failureMarkdown.contains("<font color=\"warning\">Failure</font>"));
-    }
-
-    private static BuildJobModel createModel() {
-        return BuildJobModel.builder()
-                .title("title")
-                .projectName("Demo Project")
-                .projectUrl("https://example.com/project")
-                .jobName("#42")
-                .jobUrl("https://example.com/job/42")
-                .statusType(BuildStatusEnum.SUCCESS)
-                .duration("1 sec")
-                .executorName("xm.z")
-                .build();
     }
 }

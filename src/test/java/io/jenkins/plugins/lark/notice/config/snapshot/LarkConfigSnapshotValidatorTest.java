@@ -16,6 +16,22 @@ import static org.junit.Assert.fail;
  */
 public class LarkConfigSnapshotValidatorTest {
 
+    private static LarkConfigSnapshot createValidSnapshot() {
+        LarkConfigSnapshot snapshot = new LarkConfigSnapshot();
+        snapshot.setSchemaVersion(LarkConfigSnapshot.CURRENT_SCHEMA_VERSION);
+        snapshot.setNoticeOccasions(Set.of("SUCCESS"));
+        snapshot.setRobotConfigs(List.of(createRobot("robot-a")));
+        return snapshot;
+    }
+
+    private static RobotSnapshot createRobot(String id) {
+        RobotSnapshot robotSnapshot = new RobotSnapshot();
+        robotSnapshot.setId(id);
+        robotSnapshot.setName("Robot " + id);
+        robotSnapshot.setWebhook("https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
+        return robotSnapshot;
+    }
+
     @Test
     public void validateForImportShouldRejectNullSnapshot() {
         try {
@@ -195,21 +211,5 @@ public class LarkConfigSnapshotValidatorTest {
         } catch (FormException e) {
             assertEquals("payload", e.getFormField());
         }
-    }
-
-    private static LarkConfigSnapshot createValidSnapshot() {
-        LarkConfigSnapshot snapshot = new LarkConfigSnapshot();
-        snapshot.setSchemaVersion(LarkConfigSnapshot.CURRENT_SCHEMA_VERSION);
-        snapshot.setNoticeOccasions(Set.of("SUCCESS"));
-        snapshot.setRobotConfigs(List.of(createRobot("robot-a")));
-        return snapshot;
-    }
-
-    private static RobotSnapshot createRobot(String id) {
-        RobotSnapshot robotSnapshot = new RobotSnapshot();
-        robotSnapshot.setId(id);
-        robotSnapshot.setName("Robot " + id);
-        robotSnapshot.setWebhook("https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
-        return robotSnapshot;
     }
 }

@@ -18,6 +18,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class NoticeLogTest {
 
+    private static TaskListener taskListener(ByteArrayOutputStream output) {
+        return () -> new PrintStream(output, true, StandardCharsets.UTF_8);
+    }
+
     @After
     public void tearDown() {
         NoticeLogSettings.reset();
@@ -57,9 +61,5 @@ public class NoticeLogTest {
     public void failureMessageAndAbbreviateShouldProduceStableOutput() {
         assertEquals("[Lark] hello world", NoticeLog.failureMessage("hello %s", "world"));
         assertEquals("ab...", NoticeLog.abbreviate("abcdef", 5));
-    }
-
-    private static TaskListener taskListener(ByteArrayOutputStream output) {
-        return () -> new PrintStream(output, true, StandardCharsets.UTF_8);
     }
 }

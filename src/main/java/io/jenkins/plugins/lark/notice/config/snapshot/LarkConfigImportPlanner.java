@@ -19,9 +19,9 @@ public final class LarkConfigImportPlanner {
     /**
      * Builds a preview summary for importing one snapshot into the current global configuration.
      *
-     * @param current current live global configuration
+     * @param current  current live global configuration
      * @param imported imported snapshot converted to live config values
-     * @param mode selected import mode
+     * @param mode     selected import mode
      * @return preview summary for the requested import
      */
     public static LarkConfigImportPreview preview(LarkGlobalConfig current,
@@ -66,9 +66,9 @@ public final class LarkConfigImportPlanner {
     /**
      * Applies the selected import mode to produce the target live configuration values.
      *
-     * @param current current live global configuration
+     * @param current  current live global configuration
      * @param imported imported snapshot converted to live config values
-     * @param mode selected import mode
+     * @param mode     selected import mode
      * @return final configuration payload to apply
      */
     public static LarkConfigSnapshotMapper.ImportedGlobalConfig apply(LarkGlobalConfig current,

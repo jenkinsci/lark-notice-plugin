@@ -20,41 +20,35 @@ public class TableElement {
      * 组件标签，固定为 "table"
      */
     private static final String TAG = "table";
-
-    public String getTag() {
-        return TAG;
-    }
-
     /**
      * 每页最大展示的数据行数。支持 [1,10] 整数，默认值 5
      */
     @JsonProperty("page_size")
     private Integer pageSize;
-
     /**
      * 行高设置，默认值 low
      */
     private String rowHeight;
-
     /**
      * 是否冻结首列，默认 false
      */
     @JsonProperty("freeze_first_column")
     private Boolean freezeFirstColumn;
-
     /**
      * 表头样式配置
      */
     @JsonProperty("header_style")
     private HeaderStyle headerStyle;
-
     /**
      * 表格列定义列表
      */
     private List<TableColumn> columns;
-
     /**
      * 表格行数据列表
      */
     private List<Map<String, Object>> rows;
+
+    public String getTag() {
+        return TAG;
+    }
 }

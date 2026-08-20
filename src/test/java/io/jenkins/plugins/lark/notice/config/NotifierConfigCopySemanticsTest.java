@@ -1,18 +1,16 @@
 package io.jenkins.plugins.lark.notice.config;
 
 import io.jenkins.plugins.lark.notice.config.property.LarkBranchJobProperty;
-import io.jenkins.plugins.lark.notice.service.NotifierConfigService;
 import io.jenkins.plugins.lark.notice.config.property.LarkJobProperty;
 import io.jenkins.plugins.lark.notice.enums.SecurityPolicyEnum;
+import io.jenkins.plugins.lark.notice.service.NotifierConfigService;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests for notifier config list copy semantics.

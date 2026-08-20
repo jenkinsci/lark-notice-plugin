@@ -9,29 +9,43 @@ package io.jenkins.plugins.lark.notice.enums;
  */
 public enum MsgTypeEnum {
 
-    /** Plain text message. */
+    /**
+     * Plain text message.
+     */
     TEXT,
 
-    /** Image message. */
+    /**
+     * Image message.
+     */
     IMAGE,
 
     //---------------------------------------------------Lark-----------------------------------------------------------
 
-    /** Shared chat forward (Lark). */
+    /**
+     * Shared chat forward (Lark).
+     */
     SHARE_CHAT,
 
-    /** Rich-text post (Lark). */
+    /**
+     * Rich-text post (Lark).
+     */
     POST,
 
     //--------------------------------------------------Shared----------------------------------------------------------
 
-    /** Link message (DingTalk, WeCom fallback). */
+    /**
+     * Link message (DingTalk, WeCom fallback).
+     */
     LINK,
 
-    /** Markdown message. */
+    /**
+     * Markdown message.
+     */
     MARKDOWN,
 
-    /** Interactive card message. */
+    /**
+     * Interactive card message.
+     */
     CARD
 }
 

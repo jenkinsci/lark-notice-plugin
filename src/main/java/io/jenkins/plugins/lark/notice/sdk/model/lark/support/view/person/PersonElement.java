@@ -17,38 +17,33 @@ public class PersonElement {
      * 组件标签，固定为 "person"
      */
     private static final String TAG = "person";
-
-    public String getTag() {
-        return TAG;
-    }
-
     /**
      * 人员头像尺寸。默认值为 medium。
      * 可选值：extra_small / small / medium / large / extra_large
      */
     private String size;
-
     /**
      * 人员的用户 ID
      */
     @JsonProperty("user_id")
     private String userId;
-
     /**
      * 是否展示人员的头像。默认为 true
      */
     @JsonProperty("show_avatar")
     private Boolean showAvatar;
-
     /**
      * 是否展示人员的用户名。默认为 false
      */
     @JsonProperty("show_name")
     private Boolean showName;
-
     /**
      * 人员组件的展示样式。默认为 normal（正常样式）
      * 可选值：normal / capsule（胶囊样式）
      */
     private String style;
+
+    public String getTag() {
+        return TAG;
+    }
 }

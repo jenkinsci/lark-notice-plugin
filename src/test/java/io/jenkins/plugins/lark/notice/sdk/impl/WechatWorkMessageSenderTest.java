@@ -1,7 +1,7 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
-import com.sun.net.httpserver.HttpServer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
@@ -27,9 +27,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for WeCom message payload generation.
@@ -39,6 +37,17 @@ public class WechatWorkMessageSenderTest {
     private HttpServer server;
 
     private AtomicReference<String> requestBody;
+
+    private static void assertHorizontalContent(JsonNode content, int type, String key, String value, String url) {
+        assertEquals(type, content.path("type").asInt());
+        assertEquals(key, content.path("keyname").asText());
+        assertEquals(value, content.path("value").asText());
+        if (type == 1) {
+            assertEquals(url, content.path("url").asText());
+        } else {
+            assertTrue(content.path("url").isNull());
+        }
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -263,16 +272,5 @@ public class WechatWorkMessageSenderTest {
         assertTrue(markdown.contains(">**Build Status**: <font color=\"info\">Success</font>"));
         assertTrue(markdown.contains(">**Build Duration**: 1 sec"));
         assertTrue(markdown.contains(">**Executor**: xm.z"));
-    }
-
-    private static void assertHorizontalContent(JsonNode content, int type, String key, String value, String url) {
-        assertEquals(type, content.path("type").asInt());
-        assertEquals(key, content.path("keyname").asText());
-        assertEquals(value, content.path("value").asText());
-        if (type == 1) {
-            assertEquals(url, content.path("url").asText());
-        } else {
-            assertTrue(content.path("url").isNull());
-        }
     }
 }

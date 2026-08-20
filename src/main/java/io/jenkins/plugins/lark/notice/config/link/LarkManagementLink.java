@@ -187,7 +187,7 @@ public class LarkManagementLink extends ManagementLink {
      * Builds a preview response for a snapshot import without persisting any changes.
      *
      * @param payload JSON snapshot payload pasted on the management page
-     * @param mode raw import mode request parameter
+     * @param mode    raw import mode request parameter
      * @return JSON response containing the preview summary
      */
     @POST
@@ -201,7 +201,7 @@ public class LarkManagementLink extends ManagementLink {
      * Imports a JSON snapshot and applies it to the current configuration on success.
      *
      * @param payload JSON snapshot payload pasted on the management page
-     * @param mode raw import mode request parameter
+     * @param mode    raw import mode request parameter
      * @return JSON response describing the import result
      */
     @POST
@@ -216,7 +216,7 @@ public class LarkManagementLink extends ManagementLink {
      *
      * @param robotId selected robot ID
      * @param keyword optional full name keyword
-     * @param state optional filter state
+     * @param state   optional filter state
      * @return JSON response containing filtered jobs and summary data
      */
     @POST
@@ -231,8 +231,8 @@ public class LarkManagementLink extends ManagementLink {
     /**
      * Applies selected bind and unbind changes from the standalone job binding page.
      *
-     * @param robotId selected robot ID
-     * @param bindJobFullNames newline-delimited jobs to bind
+     * @param robotId            selected robot ID
+     * @param bindJobFullNames   newline-delimited jobs to bind
      * @param unbindJobFullNames newline-delimited jobs to unbind
      * @return JSON response describing the apply outcome
      */

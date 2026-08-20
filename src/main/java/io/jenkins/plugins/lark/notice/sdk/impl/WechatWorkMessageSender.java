@@ -26,6 +26,13 @@ public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload>
         super(robotConfig);
     }
 
+    private static String withTitle(String title, String text) {
+        if (StringUtils.isBlank(title)) {
+            return text;
+        }
+        return "## " + title + LF + LF + StringUtils.defaultString(text);
+    }
+
     @Override
     public SendResult sendText(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
         String text = addKeyWord(intent.getText(), robotConfig.getKeys());
@@ -57,12 +64,5 @@ public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload>
     public SendResult sendPost(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
         log.debug("WeCom does not support post messages; falling back to markdown");
         return sendMarkdown(ctx, intent, payload);
-    }
-
-    private static String withTitle(String title, String text) {
-        if (StringUtils.isBlank(title)) {
-            return text;
-        }
-        return "## " + title + LF + LF + StringUtils.defaultString(text);
     }
 }

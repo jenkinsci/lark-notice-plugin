@@ -104,6 +104,10 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
         this.securityPolicyConfigs = copySecurityPolicyConfigs(securityPolicyConfigs);
     }
 
+    private static List<LarkSecurityPolicyConfig> copySecurityPolicyConfigs(List<LarkSecurityPolicyConfig> securityPolicyConfigs) {
+        return securityPolicyConfigs == null ? null : new ArrayList<>(securityPolicyConfigs);
+    }
+
     /**
      * Gets robot ID, generates a UUID if empty
      *
@@ -139,12 +143,32 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     }
 
     /**
+     * Updates the robot protocol family used for sender selection.
+     *
+     * @param protocolType protocol family
+     */
+    @DataBoundSetter
+    public void setProtocolType(RobotProtocolType protocolType) {
+        this.protocolType = protocolType;
+    }
+
+    /**
      * Returns the selected endpoint mode, defaulting old configurations to the full webhook mode.
      *
      * @return endpoint mode
      */
     public WebhookEndpointMode getEndpointMode() {
         return RobotWebhookResolver.resolveEndpointMode(getProtocolType(), endpointMode, baseUrl, webhookToken);
+    }
+
+    /**
+     * Updates the endpoint input mode used by the UI.
+     *
+     * @param endpointMode endpoint mode
+     */
+    @DataBoundSetter
+    public void setEndpointMode(WebhookEndpointMode endpointMode) {
+        this.endpointMode = endpointMode;
     }
 
     /**
@@ -157,12 +181,32 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     }
 
     /**
+     * Updates the transient base URL used by the token input mode.
+     *
+     * @param baseUrl base URL
+     */
+    @DataBoundSetter
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = StringUtils.trimToEmpty(baseUrl);
+    }
+
+    /**
      * Returns the current webhook token input value, deriving it from the canonical webhook when possible.
      *
      * @return webhook token for token mode
      */
     public String getWebhookToken() {
         return StringUtils.defaultIfBlank(webhookToken, RobotWebhookResolver.extractWebhookToken(getWebhook()));
+    }
+
+    /**
+     * Updates the transient webhook token used by the token input mode.
+     *
+     * @param webhookToken webhook token
+     */
+    @DataBoundSetter
+    public void setWebhookToken(String webhookToken) {
+        this.webhookToken = StringUtils.trimToEmpty(webhookToken);
     }
 
     /**
@@ -227,12 +271,34 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     }
 
     /**
+     * Updates retry configuration for this robot.
+     *
+     * @param retryConfig retry configuration, or null to reset to defaults
+     */
+    @DataBoundSetter
+    public void setRetryConfig(LarkRetryConfig retryConfig) {
+        this.retryConfig = retryConfig;
+    }
+
+    /**
      * Returns the message locale strategy configured for this robot.
      *
      * @return configured locale strategy, never {@code null}
      */
     public MessageLocaleStrategy getMessageLocaleStrategy() {
         return messageLocaleStrategy == null ? MessageLocaleStrategy.SYSTEM_DEFAULT : messageLocaleStrategy;
+    }
+
+    /**
+     * Updates the locale strategy used for built-in default messages sent by this robot.
+     *
+     * @param messageLocaleStrategy locale strategy, or {@code null} to reset to system default
+     */
+    @DataBoundSetter
+    public void setMessageLocaleStrategy(MessageLocaleStrategy messageLocaleStrategy) {
+        this.messageLocaleStrategy = messageLocaleStrategy == null
+                ? MessageLocaleStrategy.SYSTEM_DEFAULT
+                : messageLocaleStrategy;
     }
 
     /**
@@ -256,73 +322,6 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
                         LinkedHashMap::new
                 ));
     }
-
-    private static List<LarkSecurityPolicyConfig> copySecurityPolicyConfigs(List<LarkSecurityPolicyConfig> securityPolicyConfigs) {
-        return securityPolicyConfigs == null ? null : new ArrayList<>(securityPolicyConfigs);
-    }
-
-    /**
-     * Updates retry configuration for this robot.
-     *
-     * @param retryConfig retry configuration, or null to reset to defaults
-     */
-    @DataBoundSetter
-    public void setRetryConfig(LarkRetryConfig retryConfig) {
-        this.retryConfig = retryConfig;
-    }
-
-    /**
-     * Updates the locale strategy used for built-in default messages sent by this robot.
-     *
-     * @param messageLocaleStrategy locale strategy, or {@code null} to reset to system default
-     */
-    @DataBoundSetter
-    public void setMessageLocaleStrategy(MessageLocaleStrategy messageLocaleStrategy) {
-        this.messageLocaleStrategy = messageLocaleStrategy == null
-                ? MessageLocaleStrategy.SYSTEM_DEFAULT
-                : messageLocaleStrategy;
-    }
-
-    /**
-     * Updates the robot protocol family used for sender selection.
-     *
-     * @param protocolType protocol family
-     */
-    @DataBoundSetter
-    public void setProtocolType(RobotProtocolType protocolType) {
-        this.protocolType = protocolType;
-    }
-
-    /**
-     * Updates the endpoint input mode used by the UI.
-     *
-     * @param endpointMode endpoint mode
-     */
-    @DataBoundSetter
-    public void setEndpointMode(WebhookEndpointMode endpointMode) {
-        this.endpointMode = endpointMode;
-    }
-
-    /**
-     * Updates the transient base URL used by the token input mode.
-     *
-     * @param baseUrl base URL
-     */
-    @DataBoundSetter
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = StringUtils.trimToEmpty(baseUrl);
-    }
-
-    /**
-     * Updates the transient webhook token used by the token input mode.
-     *
-     * @param webhookToken webhook token
-     */
-    @DataBoundSetter
-    public void setWebhookToken(String webhookToken) {
-        this.webhookToken = StringUtils.trimToEmpty(webhookToken);
-    }
-
 
     /**
      * Gets the descriptor for this class, used to display the robot configuration page in Jenkins

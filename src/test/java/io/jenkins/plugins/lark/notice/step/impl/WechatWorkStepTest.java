@@ -11,7 +11,6 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
-import io.jenkins.plugins.lark.notice.step.impl.WechatWorkStep.MessageBundle;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,15 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class WechatWorkStepTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
+        assertEquals(expectedText, button.getText());
+        assertTrue(button.getUrl().endsWith(expectedUrlSuffix));
+    }
 
     @Test
     public void buildMessageShouldPopulateStructuredBuildFieldsForCardMessages() throws Exception {
@@ -68,10 +69,5 @@ public class WechatWorkStepTest {
         } finally {
             Locale.setDefault(previous);
         }
-    }
-
-    private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
-        assertEquals(expectedText, button.getText());
-        assertTrue(button.getUrl().endsWith(expectedUrlSuffix));
     }
 }

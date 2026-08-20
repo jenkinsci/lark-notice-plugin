@@ -463,7 +463,8 @@ public final class RobotJobBindingService {
     private record LoadRequest(LarkRobotConfig robotConfig, String keyword, JobFilterState stateFilter) {
     }
 
-    private record SelectionRequest(LarkRobotConfig robotConfig, List<String> bindJobFullNames, List<String> unbindJobFullNames) {
+    private record SelectionRequest(LarkRobotConfig robotConfig, List<String> bindJobFullNames,
+                                    List<String> unbindJobFullNames) {
     }
 
     /**

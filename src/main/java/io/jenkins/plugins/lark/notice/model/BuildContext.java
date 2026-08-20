@@ -18,33 +18,53 @@ import java.util.Locale;
 @Builder
 public class BuildContext {
 
-    /** Full display name of the Jenkins project. */
+    /**
+     * Full display name of the Jenkins project.
+     */
     private final String projectName;
 
-    /** Absolute URL of the Jenkins project. */
+    /**
+     * Absolute URL of the Jenkins project.
+     */
     private final String projectUrl;
 
-    /** Display name of the Jenkins build run. */
+    /**
+     * Display name of the Jenkins build run.
+     */
     private final String jobName;
 
-    /** Absolute URL of the Jenkins build run. */
+    /**
+     * Absolute URL of the Jenkins build run.
+     */
     private final String jobUrl;
 
-    /** Build outcome status. */
+    /**
+     * Build outcome status.
+     */
     private final BuildStatusEnum statusType;
 
-    /** Human-readable build duration. */
+    /**
+     * Human-readable build duration.
+     */
     private final String duration;
 
-    /** Display name of the build executor. */
+    /**
+     * Display name of the build executor.
+     */
     private final String executorName;
 
-    /** Mobile number of the executor, used for @mention by platforms that key on mobile. */
+    /**
+     * Mobile number of the executor, used for @mention by platforms that key on mobile.
+     */
     private final String executorMobile;
 
-    /** Open id of the executor, used for @mention by platforms that key on open id. */
+    /**
+     * Open id of the executor, used for @mention by platforms that key on open id.
+     */
     private final String executorOpenId;
 
-    /** Locale used when rendering platform-specific structured card labels. */
+    /**
+     * Locale used when rendering platform-specific structured card labels.
+     */
     private final Locale locale;
 }

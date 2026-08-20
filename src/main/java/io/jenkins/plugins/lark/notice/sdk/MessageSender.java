@@ -21,8 +21,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends a text message.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return result of the send operation
      */
@@ -31,8 +31,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends a markdown message.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return result of the send operation
      */
@@ -41,8 +41,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends an image message. Unsupported unless overridden.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return failure result by default
      */
@@ -53,8 +53,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends a shared-chat message. Unsupported unless overridden.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return failure result by default
      */
@@ -65,8 +65,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends a link message. Unsupported unless overridden.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return failure result by default
      */
@@ -77,8 +77,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends a rich-text post message. Unsupported unless overridden.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return failure result by default
      */
@@ -89,8 +89,8 @@ public interface MessageSender<T extends PlatformPayload> {
     /**
      * Sends an interactive card message. Unsupported unless overridden.
      *
-     * @param ctx    shared build context
-     * @param intent cross-platform rendering intent
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
      * @param payload platform-specific payload
      * @return failure result by default
      */

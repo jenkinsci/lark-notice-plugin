@@ -19,12 +19,18 @@ import java.util.List;
 @Builder
 public class WeComPayload implements PlatformPayload {
 
-    /** Extra free-form text appended as a {@code vertical_content_list} entry, overriding structured rows. */
+    /**
+     * Extra free-form text appended as a {@code vertical_content_list} entry, overriding structured rows.
+     */
     private final String additionalContent;
 
-    /** Customizable source description shown in the card header source line. */
+    /**
+     * Customizable source description shown in the card header source line.
+     */
     private final String sourceDesc;
 
-    /** Customizable card rows. When empty the sender builds default build-info rows from the context. */
+    /**
+     * Customizable card rows. When empty the sender builds default build-info rows from the context.
+     */
     private final List<CardField> cardFields;
 }

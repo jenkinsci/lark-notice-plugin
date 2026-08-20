@@ -2,7 +2,6 @@ package io.jenkins.plugins.lark.notice;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
-import hudson.model.TaskListener;
 import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkNotifier;
 import io.jenkins.plugins.lark.notice.config.LarkNotifierConfig;
@@ -19,9 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Integration tests for notifier behavior and job configuration compatibility.
@@ -30,6 +27,31 @@ public class NotifierIntegrationTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static LarkRobotConfig createRobot(String id) {
+        return new LarkRobotConfig(
+                id,
+                "Robot-" + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of()
+        );
+    }
+
+    private static LarkNotifierConfig createEnabledNotifierConfig(String robotId, String occasion) {
+        return new LarkNotifierConfig(
+                false,
+                false,
+                true,
+                robotId,
+                "Robot-" + robotId,
+                false,
+                "",
+                "title",
+                "content",
+                "",
+                Set.of(occasion)
+        );
+    }
 
     @Before
     public void setUp() {
@@ -75,30 +97,5 @@ public class NotifierIntegrationTest {
         List<LarkNotifierConfig> afterPublisher =
                 (List<LarkNotifierConfig>) method.invoke(runListener, project);
         assertTrue(afterPublisher.isEmpty());
-    }
-
-    private static LarkRobotConfig createRobot(String id) {
-        return new LarkRobotConfig(
-                id,
-                "Robot-" + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of()
-        );
-    }
-
-    private static LarkNotifierConfig createEnabledNotifierConfig(String robotId, String occasion) {
-        return new LarkNotifierConfig(
-                false,
-                false,
-                true,
-                robotId,
-                "Robot-" + robotId,
-                false,
-                "",
-                "title",
-                "content",
-                "",
-                Set.of(occasion)
-        );
     }
 }

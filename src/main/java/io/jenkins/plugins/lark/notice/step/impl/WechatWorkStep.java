@@ -8,12 +8,11 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
-import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
-import io.jenkins.plugins.lark.notice.model.RunUser;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.step.AbstractStep;
@@ -187,10 +186,6 @@ public class WechatWorkStep extends AbstractStep {
         return service.send(listener, robotId, bundle.ctx, bundle.intent, bundle.payload);
     }
 
-    /** Assembled message parts produced by {@link #buildMessage}. */
-    record MessageBundle(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
-    }
-
     /**
      * Assembles the shared context, cross-platform intent and WeCom payload for a run.
      *
@@ -234,6 +229,12 @@ public class WechatWorkStep extends AbstractStep {
                 .map(envVars::expand)
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Assembled message parts produced by {@link #buildMessage}.
+     */
+    record MessageBundle(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
     }
 
     @Extension

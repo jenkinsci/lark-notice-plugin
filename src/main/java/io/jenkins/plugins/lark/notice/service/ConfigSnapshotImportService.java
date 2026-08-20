@@ -31,8 +31,8 @@ public final class ConfigSnapshotImportService {
             ParsedImportRequest importRequest = parseImportRequest(payload, modeValue);
             LarkConfigImportPreview preview = LarkConfigImportPlanner.preview(
                     globalConfig,
-                    importRequest.getImported(),
-                    importRequest.getMode()
+                    importRequest.imported(),
+                    importRequest.mode()
             );
             return ApiResponse.ok(Messages.config_import_preview_success(), JSONObject.fromObject(preview));
         } catch (FormException ex) {
@@ -55,8 +55,8 @@ public final class ConfigSnapshotImportService {
             ParsedImportRequest importRequest = parseImportRequest(payload, modeValue);
             LarkConfigSnapshotMapper.ImportedGlobalConfig planned = LarkConfigImportPlanner.apply(
                     globalConfig,
-                    importRequest.getImported(),
-                    importRequest.getMode()
+                    importRequest.imported(),
+                    importRequest.mode()
             );
             globalConfig.setVerbose(planned.isVerbose());
             globalConfig.setFailBuildOnNotificationFailure(planned.isFailBuildOnNotificationFailure());
@@ -97,23 +97,9 @@ public final class ConfigSnapshotImportService {
     }
 
     /**
-     * Parsed import request bundle used by preview and apply flows.
-     */
-    private static final class ParsedImportRequest {
-        private final LarkConfigImportMode mode;
-        private final LarkConfigSnapshotMapper.ImportedGlobalConfig imported;
-
-        private ParsedImportRequest(LarkConfigImportMode mode, LarkConfigSnapshotMapper.ImportedGlobalConfig imported) {
-            this.mode = mode;
-            this.imported = imported;
-        }
-
-        private LarkConfigImportMode getMode() {
-            return mode;
-        }
-
-        private LarkConfigSnapshotMapper.ImportedGlobalConfig getImported() {
-            return imported;
-        }
+         * Parsed import request bundle used by preview and apply flows.
+         */
+        private record ParsedImportRequest(LarkConfigImportMode mode,
+                                           LarkConfigSnapshotMapper.ImportedGlobalConfig imported) {
     }
 }

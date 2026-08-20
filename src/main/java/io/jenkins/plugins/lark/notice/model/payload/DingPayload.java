@@ -12,12 +12,18 @@ import lombok.Getter;
 @Builder
 public class DingPayload implements PlatformPayload {
 
-    /** Title of the single-action button on a DingTalk action card. When set with {@link #singleUrl}, buttons are ignored. */
+    /**
+     * Title of the single-action button on a DingTalk action card. When set with {@link #singleUrl}, buttons are ignored.
+     */
     private final String singleTitle;
 
-    /** Target URL of the single-action button on a DingTalk action card. */
+    /**
+     * Target URL of the single-action button on a DingTalk action card.
+     */
     private final String singleUrl;
 
-    /** DingTalk action-card button layout: {@code 0} vertical, {@code 1} horizontal. */
+    /**
+     * DingTalk action-card button layout: {@code 0} vertical, {@code 1} horizontal.
+     */
     private final String btnOrientation;
 }

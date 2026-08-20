@@ -32,34 +32,54 @@ import java.util.stream.Collectors;
 @Builder(toBuilder = true)
 public class MessageIntent {
 
-    /** The message type, determining the format or channel of the message. */
+    /**
+     * The message type, determining the format or channel of the message.
+     */
     private MsgTypeEnum type;
 
-    /** Build status used to derive card theme color when not otherwise provided. */
+    /**
+     * Build status used to derive card theme color when not otherwise provided.
+     */
     private BuildStatusEnum statusType;
 
-    /** Message title, displayed prominently. May be blank to use a default. */
+    /**
+     * Message title, displayed prominently. May be blank to use a default.
+     */
     private String title;
 
-    /** Main text content of the message (Markdown or plain depending on type/platform). */
+    /**
+     * Main text content of the message (Markdown or plain depending on type/platform).
+     */
     private String text;
 
-    /** User identifiers to @mention. Split into mobile vs id groups by {@link #getAt()}. */
+    /**
+     * User identifiers to @mention. Split into mobile vs id groups by {@link #getAt()}.
+     */
     private Set<String> atUserIds;
 
-    /** Whether to @mention everyone in scope. */
+    /**
+     * Whether to @mention everyone in scope.
+     */
     private boolean atAll;
 
-    /** Interactive buttons shared by Lark interactive cards and DingTalk action cards. */
+    /**
+     * Interactive buttons shared by Lark interactive cards and DingTalk action cards.
+     */
     private List<Button> buttons;
 
-    /** Top image element shared by Lark cards and WeCom template cards. */
+    /**
+     * Top image element shared by Lark cards and WeCom template cards.
+     */
     private ImgElement topImg;
 
-    /** Image URL used by DingTalk link messages and as a WeCom card image fallback. */
+    /**
+     * Image URL used by DingTalk link messages and as a WeCom card image fallback.
+     */
     private String picUrl;
 
-    /** Click-through URL opened by link-style messages or card body clicks. */
+    /**
+     * Click-through URL opened by link-style messages or card body clicks.
+     */
     private String messageUrl;
 
     /**

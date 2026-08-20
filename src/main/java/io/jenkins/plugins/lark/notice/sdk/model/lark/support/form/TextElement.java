@@ -15,11 +15,6 @@ public class TextElement {
      * 文本类型标签，固定为 "plain_text"
      */
     private static final String TAG = "plain_text";
-
-    public String getTag() {
-        return TAG;
-    }
-
     /**
      * 文本内容
      */
@@ -33,5 +28,9 @@ public class TextElement {
         TextElement textElement = new TextElement();
         textElement.setContent(text);
         return textElement;
+    }
+
+    public String getTag() {
+        return TAG;
     }
 }

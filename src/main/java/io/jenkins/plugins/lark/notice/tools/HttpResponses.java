@@ -46,7 +46,7 @@ public final class HttpResponses {
     /**
      * Creates one downloadable response body with JSON content type.
      *
-     * @param body response body to write
+     * @param body     response body to write
      * @param fileName download file name
      * @return stapler response serving the provided body as an attachment
      */

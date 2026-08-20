@@ -1,15 +1,15 @@
 package io.jenkins.plugins.lark.notice.model;
 
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
-import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter;
-import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter.BuildMessageLineValues;
-import io.jenkins.plugins.lark.notice.tools.Utils;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
-import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
+import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter;
+import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter.BuildMessageLineValues;
+import io.jenkins.plugins.lark.notice.tools.Utils;
 import lombok.Builder;
 import lombok.Data;
 
@@ -105,7 +105,7 @@ public class BuildJobModel {
      * Converts the build job details into a Markdown formatted string using the provided locale.
      *
      * @param robotType robot platform type
-     * @param locale locale to render labels with
+     * @param locale    locale to render labels with
      * @return Markdown string containing the build job details
      */
     public String toMarkdown(RobotType robotType, Locale locale) {

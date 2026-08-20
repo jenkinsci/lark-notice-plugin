@@ -1,11 +1,6 @@
 package io.jenkins.plugins.lark.notice.config.snapshot;
 
-import hudson.model.Descriptor.FormException;
-import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
-import io.jenkins.plugins.lark.notice.config.LarkProxyConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRetryConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
-import io.jenkins.plugins.lark.notice.config.LarkSecurityPolicyConfig;
+import io.jenkins.plugins.lark.notice.config.*;
 import io.jenkins.plugins.lark.notice.enums.MessageLocaleStrategy;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
@@ -16,10 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for snapshot import/export mapping and validation.
@@ -27,6 +19,43 @@ import static org.junit.Assert.assertTrue;
  * @author xm.z
  */
 public class LarkConfigSnapshotTest {
+
+    private static LarkProxyConfig createProxy() {
+        LarkProxyConfig proxyConfig = new LarkProxyConfig();
+        proxyConfig.setEnabled(true);
+        proxyConfig.setType(Proxy.Type.HTTP);
+        proxyConfig.setHost("proxy.internal");
+        proxyConfig.setPort(8080);
+        return proxyConfig;
+    }
+
+    private static LarkRobotConfig createRobot(String id) {
+        LarkRobotConfig robotConfig = new LarkRobotConfig(
+                id,
+                "Robot " + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of(
+                        new LarkSecurityPolicyConfig("KEY", "keyword-" + id, "Keyword"),
+                        new LarkSecurityPolicyConfig("NO_SSL", "true", "No SSL")
+                )
+        );
+        robotConfig.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
+        robotConfig.setEndpointMode(WebhookEndpointMode.BASE_URL_AND_TOKEN);
+        robotConfig.setMessageLocaleStrategy(MessageLocaleStrategy.EN_US);
+        robotConfig.setRetryConfig(new LarkRetryConfig(true, 3, 500, 5000, 2.0d, 0.2d));
+        return robotConfig;
+    }
+
+    private static RobotSnapshot createRobotSnapshotWithEnabledRetryOnly(String id) {
+        RobotSnapshot robotSnapshot = new RobotSnapshot();
+        robotSnapshot.setId(id);
+        robotSnapshot.setName("Robot " + id);
+        robotSnapshot.setWebhook("https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
+        RetrySnapshot retrySnapshot = new RetrySnapshot();
+        retrySnapshot.setEnabled(true);
+        robotSnapshot.setRetryConfig(retrySnapshot);
+        return robotSnapshot;
+    }
 
     @Test
     public void snapshotRoundTripShouldPreserveConfiguredValues() {
@@ -180,42 +209,5 @@ public class LarkConfigSnapshotTest {
         assertEquals("robot-b", merged.getRobotConfigs().get(1).getId());
         assertEquals("Robot robot-b", merged.getRobotConfigs().get(1).getName());
         assertEquals("robot-c", merged.getRobotConfigs().get(2).getId());
-    }
-
-    private static LarkProxyConfig createProxy() {
-        LarkProxyConfig proxyConfig = new LarkProxyConfig();
-        proxyConfig.setEnabled(true);
-        proxyConfig.setType(Proxy.Type.HTTP);
-        proxyConfig.setHost("proxy.internal");
-        proxyConfig.setPort(8080);
-        return proxyConfig;
-    }
-
-    private static LarkRobotConfig createRobot(String id) {
-        LarkRobotConfig robotConfig = new LarkRobotConfig(
-                id,
-                "Robot " + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of(
-                        new LarkSecurityPolicyConfig("KEY", "keyword-" + id, "Keyword"),
-                        new LarkSecurityPolicyConfig("NO_SSL", "true", "No SSL")
-                )
-        );
-        robotConfig.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
-        robotConfig.setEndpointMode(WebhookEndpointMode.BASE_URL_AND_TOKEN);
-        robotConfig.setMessageLocaleStrategy(MessageLocaleStrategy.EN_US);
-        robotConfig.setRetryConfig(new LarkRetryConfig(true, 3, 500, 5000, 2.0d, 0.2d));
-        return robotConfig;
-    }
-
-    private static RobotSnapshot createRobotSnapshotWithEnabledRetryOnly(String id) {
-        RobotSnapshot robotSnapshot = new RobotSnapshot();
-        robotSnapshot.setId(id);
-        robotSnapshot.setName("Robot " + id);
-        robotSnapshot.setWebhook("https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
-        RetrySnapshot retrySnapshot = new RetrySnapshot();
-        retrySnapshot.setEnabled(true);
-        robotSnapshot.setRetryConfig(retrySnapshot);
-        return robotSnapshot;
     }
 }

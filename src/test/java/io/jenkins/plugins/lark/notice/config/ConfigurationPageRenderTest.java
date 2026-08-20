@@ -3,21 +3,21 @@ package io.jenkins.plugins.lark.notice.config;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.scm.NullSCM;
-import io.jenkins.plugins.lark.notice.config.property.LarkJobProperty;
 import io.jenkins.plugins.lark.notice.config.property.LarkBranchJobProperty;
+import io.jenkins.plugins.lark.notice.config.property.LarkJobProperty;
 import jenkins.branch.BranchProperty;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
 import jenkins.scm.impl.SingleSCMSource;
+import org.htmlunit.Page;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
-import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.util.NameValuePair;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.htmlunit.html.HtmlPage;
-import org.htmlunit.util.NameValuePair;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
@@ -36,6 +36,25 @@ public class ConfigurationPageRenderTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static LarkRobotConfig createRobot(String id) {
+        return new LarkRobotConfig(
+                id,
+                "Robot-" + id,
+                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
+                List.of()
+        );
+    }
+
+    private static int countMatches(String text, String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(needle, index)) >= 0) {
+            count++;
+            index += needle.length();
+        }
+        return count;
+    }
 
     @Before
     public void setUp() {
@@ -365,15 +384,6 @@ public class ConfigurationPageRenderTest {
         }
     }
 
-    private static LarkRobotConfig createRobot(String id) {
-        return new LarkRobotConfig(
-                id,
-                "Robot-" + id,
-                "https://open.feishu.cn/open-apis/bot/v2/hook/" + id,
-                List.of()
-        );
-    }
-
     private void createJobFromNewJobPage(String jobName, String jobTypeId) throws Exception {
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
             webClient.getOptions().setJavaScriptEnabled(false);
@@ -392,15 +402,5 @@ public class ConfigurationPageRenderTest {
                 webClient.goTo("job/" + jobName + "/configure");
             }
         }
-    }
-
-    private static int countMatches(String text, String needle) {
-        int count = 0;
-        int index = 0;
-        while ((index = text.indexOf(needle, index)) >= 0) {
-            count++;
-            index += needle.length();
-        }
-        return count;
     }
 }

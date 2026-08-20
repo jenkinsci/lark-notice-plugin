@@ -141,7 +141,7 @@ public class MessageDispatcher {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private SendResult dispatch(MessageSender sender, MsgTypeEnum type, BuildContext ctx,
-                               MessageIntent intent, PlatformPayload payload) {
+                                MessageIntent intent, PlatformPayload payload) {
         return switch (type) {
             case TEXT -> sender.sendText(ctx, intent, payload);
             case MARKDOWN -> sender.sendMarkdown(ctx, intent, payload);

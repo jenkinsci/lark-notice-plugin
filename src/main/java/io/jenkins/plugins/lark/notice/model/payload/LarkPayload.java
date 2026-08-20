@@ -16,15 +16,23 @@ import java.util.Map;
 @Builder
 public class LarkPayload implements PlatformPayload {
 
-    /** Image key for a pure image message (Lark {@code image} msg type). */
+    /**
+     * Image key for a pure image message (Lark {@code image} msg type).
+     */
     private final String imageKey;
 
-    /** Chat id for forwarding a shared chat (Lark {@code share_chat} msg type). */
+    /**
+     * Chat id for forwarding a shared chat (Lark {@code share_chat} msg type).
+     */
     private final String shareChatId;
 
-    /** Rich-text post body (Lark {@code post} msg type), as nested region/segment maps. */
+    /**
+     * Rich-text post body (Lark {@code post} msg type), as nested region/segment maps.
+     */
     private final List<List<Map<String, String>>> post;
 
-    /** Image element appended at the bottom of a Lark interactive card body. */
+    /**
+     * Image element appended at the bottom of a Lark interactive card body.
+     */
     private final ImgElement bottomImg;
 }

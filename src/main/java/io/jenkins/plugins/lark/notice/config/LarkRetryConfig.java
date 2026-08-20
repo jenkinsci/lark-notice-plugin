@@ -162,6 +162,23 @@ public class LarkRetryConfig extends Descriptor<LarkRetryConfig> implements Desc
     }
 
     /**
+     * Parses a string into a Double, returning null when blank or invalid.
+     *
+     * @param value input value
+     * @return parsed Double or null when invalid
+     */
+    private static Double parseDouble(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    /**
      * Applies default values to this config instance.
      */
     private void applyDefaults() {
@@ -213,22 +230,5 @@ public class LarkRetryConfig extends Descriptor<LarkRetryConfig> implements Desc
             return FormValidation.error(Messages.retry_validation_jitter_ratio_invalid());
         }
         return FormValidation.ok();
-    }
-
-    /**
-     * Parses a string into a Double, returning null when blank or invalid.
-     *
-     * @param value input value
-     * @return parsed Double or null when invalid
-     */
-    private static Double parseDouble(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException ex) {
-            return null;
-        }
     }
 }

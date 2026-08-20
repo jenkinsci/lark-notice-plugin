@@ -26,32 +26,6 @@ public enum MessageLocaleStrategy {
     EN_US;
 
     /**
-     * Resolves the strategy to a concrete locale.
-     *
-     * @return concrete locale represented by the strategy
-     */
-    public Locale toLocale() {
-        return switch (this) {
-            case SYSTEM_DEFAULT -> Locale.getDefault();
-            case ZH_CN -> Locale.SIMPLIFIED_CHINESE;
-            case EN_US -> Locale.US;
-        };
-    }
-
-    /**
-     * Collapses the strategy to one of the explicit UI options.
-     *
-     * @return explicit Chinese or English strategy for segmented controls
-     */
-    public MessageLocaleStrategy toSelectableStrategy() {
-        return switch (this) {
-            case ZH_CN -> ZH_CN;
-            case EN_US -> EN_US;
-            case SYSTEM_DEFAULT -> fromLocale(Locale.getDefault());
-        };
-    }
-
-    /**
      * Maps a locale to the nearest supported explicit strategy.
      *
      * @param locale source locale
@@ -77,5 +51,31 @@ public enum MessageLocaleStrategy {
         } catch (IllegalArgumentException ex) {
             return SYSTEM_DEFAULT;
         }
+    }
+
+    /**
+     * Resolves the strategy to a concrete locale.
+     *
+     * @return concrete locale represented by the strategy
+     */
+    public Locale toLocale() {
+        return switch (this) {
+            case SYSTEM_DEFAULT -> Locale.getDefault();
+            case ZH_CN -> Locale.SIMPLIFIED_CHINESE;
+            case EN_US -> Locale.US;
+        };
+    }
+
+    /**
+     * Collapses the strategy to one of the explicit UI options.
+     *
+     * @return explicit Chinese or English strategy for segmented controls
+     */
+    public MessageLocaleStrategy toSelectableStrategy() {
+        return switch (this) {
+            case ZH_CN -> ZH_CN;
+            case EN_US -> EN_US;
+            case SYSTEM_DEFAULT -> fromLocale(Locale.getDefault());
+        };
     }
 }

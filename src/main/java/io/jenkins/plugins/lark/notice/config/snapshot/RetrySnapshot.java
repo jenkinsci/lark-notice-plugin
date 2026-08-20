@@ -45,6 +45,18 @@ public class RetrySnapshot {
      */
     private Double jitterRatio;
 
+    private static int defaultInteger(Integer value, int defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    private static long defaultLong(Long value, long defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    private static double defaultDouble(Double value, double defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
     /**
      * Converts this snapshot into a retry config, defaulting omitted detail fields.
      *
@@ -67,17 +79,5 @@ public class RetrySnapshot {
                 && Long.valueOf(0L).equals(maxDelayMs)
                 && Double.valueOf(0.0d).equals(backoffMultiplier)
                 && Double.valueOf(0.0d).equals(jitterRatio);
-    }
-
-    private static int defaultInteger(Integer value, int defaultValue) {
-        return value == null ? defaultValue : value;
-    }
-
-    private static long defaultLong(Long value, long defaultValue) {
-        return value == null ? defaultValue : value;
-    }
-
-    private static double defaultDouble(Double value, double defaultValue) {
-        return value == null ? defaultValue : value;
     }
 }

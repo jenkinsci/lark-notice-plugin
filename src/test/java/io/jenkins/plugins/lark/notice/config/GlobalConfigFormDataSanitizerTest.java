@@ -5,9 +5,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Tests for global configuration form payload normalization.
@@ -15,6 +13,14 @@ import static org.junit.Assert.fail;
  * @author xm.z
  */
 public class GlobalConfigFormDataSanitizerTest {
+
+    private static JSONObject createRobot(String id) {
+        JSONObject robot = new JSONObject();
+        robot.put("id", id);
+        robot.put("name", "Robot-" + id);
+        robot.put("webhook", "https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
+        return robot;
+    }
 
     @Test
     public void shouldReturnEmptyArrayWhenRobotConfigsAreMissing() throws Exception {
@@ -164,13 +170,5 @@ public class GlobalConfigFormDataSanitizerTest {
         } catch (FormException e) {
             assertEquals("robotConfigs[0].webhook", e.getFormField());
         }
-    }
-
-    private static JSONObject createRobot(String id) {
-        JSONObject robot = new JSONObject();
-        robot.put("id", id);
-        robot.put("name", "Robot-" + id);
-        robot.put("webhook", "https://open.feishu.cn/open-apis/bot/v2/hook/" + id);
-        return robot;
     }
 }

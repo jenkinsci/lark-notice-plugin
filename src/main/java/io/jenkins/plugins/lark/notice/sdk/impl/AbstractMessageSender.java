@@ -2,9 +2,9 @@ package io.jenkins.plugins.lark.notice.sdk.impl;
 
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.HttpClientFactory;
 import io.jenkins.plugins.lark.notice.sdk.MessageSender;
-import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import lombok.Getter;

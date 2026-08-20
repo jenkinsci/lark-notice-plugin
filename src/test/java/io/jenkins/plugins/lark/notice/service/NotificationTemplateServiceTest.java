@@ -14,6 +14,22 @@ import static org.junit.Assert.assertTrue;
  */
 public class NotificationTemplateServiceTest {
 
+    private static LarkNotifierConfig createConfig(boolean raw, String title, String content, String message) {
+        return new LarkNotifierConfig(
+                raw,
+                false,
+                true,
+                "robot-preview",
+                "Robot Preview",
+                false,
+                "",
+                title,
+                content,
+                message,
+                Set.of("SUCCESS")
+        );
+    }
+
     @Test
     public void defaultTemplateShouldContainEditableVariables() {
         LarkNotifierConfig config = createConfig(false, "${JOB_NAME} build", "extra: ${JOB_STATUS}", "");
@@ -37,21 +53,5 @@ public class NotificationTemplateServiceTest {
         assertTrue(template.contains("${PROJECT_NAME}"));
         assertTrue(template.contains("${JOB_STATUS}"));
         assertTrue(template.contains("${EXECUTOR_NAME}"));
-    }
-
-    private static LarkNotifierConfig createConfig(boolean raw, String title, String content, String message) {
-        return new LarkNotifierConfig(
-                raw,
-                false,
-                true,
-                "robot-preview",
-                "Robot Preview",
-                false,
-                "",
-                title,
-                content,
-                message,
-                Set.of("SUCCESS")
-        );
     }
 }

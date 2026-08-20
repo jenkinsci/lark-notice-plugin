@@ -73,8 +73,8 @@ public final class JsonUtils {
      * Deserializes a JSON string into the requested type.
      *
      * @param jsonString raw JSON string
-     * @param valueType target type
-     * @param <T> target type parameter
+     * @param valueType  target type
+     * @param <T>        target type parameter
      * @return deserialized object, or {@code null} when the input is blank
      */
     @SneakyThrows(IOException.class)
@@ -88,9 +88,9 @@ public final class JsonUtils {
     /**
      * Deserializes a JSON array into a typed list.
      *
-     * @param content raw JSON array string
+     * @param content      raw JSON array string
      * @param elementClass list element type
-     * @param <T> element type parameter
+     * @param <T>          element type parameter
      * @return deserialized list, or an empty list when the input is blank
      */
     @SneakyThrows(IOException.class)

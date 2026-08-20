@@ -9,6 +9,7 @@ import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkNotifierConfig;
 import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.logging.NoticeLog;
 import io.jenkins.plugins.lark.notice.logging.NoticeLogKey;
@@ -18,7 +19,6 @@ import io.jenkins.plugins.lark.notice.model.BuildJobModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RunUser;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
-import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import org.apache.commons.lang3.StringUtils;
@@ -115,8 +115,8 @@ public final class NotificationDispatchExecutor {
     /**
      * Applies title and content templates onto build model fields.
      *
-     * @param config notifier config
-     * @param model  build model
+     * @param config  notifier config
+     * @param model   build model
      * @param envVars environment variables
      */
     static void applyModelTemplateValues(LarkNotifierConfig config, BuildJobModel model, EnvVars envVars, Locale locale) {
@@ -142,13 +142,13 @@ public final class NotificationDispatchExecutor {
     /**
      * Handles send result logging and the configurable build-result fallback.
      *
-     * @param source             logical trigger source
-     * @param run                build run
-     * @param listener           Jenkins task listener
-     * @param occasion           current notice occasion
-     * @param robotId            robot identifier
-     * @param sendResult         send result returned by dispatcher
-     * @param failBuild whether a send failure should mark the build as {@code FAILURE}
+     * @param source     logical trigger source
+     * @param run        build run
+     * @param listener   Jenkins task listener
+     * @param occasion   current notice occasion
+     * @param robotId    robot identifier
+     * @param sendResult send result returned by dispatcher
+     * @param failBuild  whether a send failure should mark the build as {@code FAILURE}
      */
     static void handleSendResult(String source, Run<?, ?> run, TaskListener listener,
                                  NoticeOccasionEnum occasion, String robotId, SendResult sendResult,
