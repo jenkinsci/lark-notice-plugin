@@ -44,6 +44,8 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
 
     private static final int MAX_JUMP_ITEMS = 3;
 
+    private static final int MAX_HORIZONTAL_CONTENT_ITEMS = 6;
+
     private static final double CARD_IMAGE_ASPECT_RATIO = 2.25d;
 
     @JsonProperty("template_card")
@@ -129,11 +131,14 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
     /**
      * Resolves horizontal content rows. Uses payload-supplied {@link CardField}s when present
      * (customizable rows), otherwise builds the default build-info rows from the context.
+     * Custom rows are capped at {@link #MAX_HORIZONTAL_CONTENT_ITEMS} because WeCom rejects
+     * longer lists; the default rows never exceed that cap.
      */
     private static List<HorizontalContent> resolveHorizontalContentList(BuildContext ctx, WeComPayload payload) {
         if (CollectionUtils.isNotEmpty(payload.getCardFields())) {
             return payload.getCardFields().stream()
                     .filter(field -> StringUtils.isNotBlank(field.getValue()))
+                    .limit(MAX_HORIZONTAL_CONTENT_ITEMS)
                     .map(WechatWorkTemplateCardMessage::toHorizontalContent)
                     .toList();
         }

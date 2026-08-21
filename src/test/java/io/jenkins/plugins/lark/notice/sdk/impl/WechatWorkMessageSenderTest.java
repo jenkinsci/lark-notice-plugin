@@ -229,6 +229,45 @@ public class WechatWorkMessageSenderTest {
     }
 
     @Test
+    public void cardFieldsShouldBeCappedAtSixRows() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        MessageIntent intent = MessageIntent.builder()
+                .type(MsgTypeEnum.CARD)
+                .title("Release")
+                .statusType(BuildStatusEnum.SUCCESS)
+                .build();
+        BuildContext ctx = BuildContext.builder()
+                .statusType(BuildStatusEnum.SUCCESS)
+                .locale(Locale.US)
+                .build();
+        // Blank-valued rows are dropped before the cap, so 9 inputs must yield the first 6 non-blank rows.
+        WeComPayload payload = WeComPayload.builder()
+                .cardFields(List.of(
+                        CardField.builder().keyname("k1").value("v1").build(),
+                        CardField.builder().keyname("blank").value("  ").build(),
+                        CardField.builder().keyname("k2").value("v2").build(),
+                        CardField.builder().keyname("k3").value("v3").build(),
+                        CardField.builder().keyname("k4").value("v4").build(),
+                        CardField.builder().keyname("k5").value("v5").build(),
+                        CardField.builder().keyname("k6").value("v6").build(),
+                        CardField.builder().keyname("k7").value("v7").build(),
+                        CardField.builder().keyname("k8").value("v8").build()))
+                .build();
+
+        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+
+        assertTrue(result.isOk());
+        JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
+        assertEquals(6, rows.size());
+        assertEquals("k1", rows.get(0).path("keyname").asText());
+        assertEquals("k6", rows.get(5).path("keyname").asText());
+    }
+
+    @Test
     public void cardImageShouldUsePicUrlWhenProvided() {
         RobotConfigModel robotConfig = new RobotConfigModel();
         robotConfig.setRobotType(RobotType.WECHAT_WORK);
