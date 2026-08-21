@@ -108,6 +108,18 @@ public interface MessageSender<T extends PlatformPayload> {
     }
 
     /**
+     * Sends a feed-card message. Unsupported unless overridden.
+     *
+     * @param ctx     shared build context
+     * @param intent  cross-platform rendering intent
+     * @param payload platform-specific payload
+     * @return failure result by default
+     */
+    default SendResult sendFeedCard(BuildContext ctx, MessageIntent intent, T payload) {
+        return SendResult.fail("This type of message is not supported.");
+    }
+
+    /**
      * Appends robot keywords to message content.
      *
      * @param str  original content

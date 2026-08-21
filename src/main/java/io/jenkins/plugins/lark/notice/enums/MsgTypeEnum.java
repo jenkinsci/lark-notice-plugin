@@ -19,8 +19,6 @@ public enum MsgTypeEnum {
      */
     IMAGE,
 
-    //---------------------------------------------------Lark-----------------------------------------------------------
-
     /**
      * Shared chat forward (Lark).
      */
@@ -30,8 +28,6 @@ public enum MsgTypeEnum {
      * Rich-text post (Lark).
      */
     POST,
-
-    //--------------------------------------------------Shared----------------------------------------------------------
 
     /**
      * Link message (DingTalk, WeCom fallback).
@@ -46,6 +42,11 @@ public enum MsgTypeEnum {
     /**
      * Interactive card message.
      */
-    CARD
+    CARD,
+
+    /**
+     * Feed card message: a list of image-and-title entries, each with its own jump target (DingTalk).
+     */
+    FEED_CARD
 }
 

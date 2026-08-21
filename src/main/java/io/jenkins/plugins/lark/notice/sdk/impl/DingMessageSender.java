@@ -6,6 +6,7 @@ import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingCardMessage;
+import io.jenkins.plugins.lark.notice.sdk.model.ding.DingFeedCardMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingLinkMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingMdMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.ding.DingTextMessage;
@@ -27,6 +28,15 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
 
     public DingMessageSender(RobotConfigModel robotConfig) {
         super(robotConfig);
+    }
+
+    @Override
+    public SendResult sendFeedCard(BuildContext ctx, MessageIntent intent, DingPayload payload) {
+        List<DingFeedCardMessage.FeedCardLink> links = payload == null ? null : payload.getFeedCardLinks();
+        if (CollectionUtils.isEmpty(links)) {
+            return SendResult.fail("A feedCard message requires at least one link entry.");
+        }
+        return sendMessage(JsonUtils.toJson(DingFeedCardMessage.build(links)), signHeaders());
     }
 
     /**
@@ -87,13 +97,15 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
         String text = addKeyWord(withCardFields(intent), robotConfig.getKeys());
         String singleTitle = payload == null ? null : payload.getSingleTitle();
         if (StringUtils.isNotBlank(singleTitle)) {
-            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, singleTitle, payload.getSingleUrl());
+            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text,
+                    singleTitle, payload.getSingleUrl(), payload.getHideAvatar());
         } else {
             List<DingCardMessage.Button> buttons = CollectionUtils.isEmpty(intent.getButtons()) ? null : intent.getButtons().stream()
                     .map(button -> new DingCardMessage.Button(button.getText(), button.getUrl()))
                     .collect(Collectors.toList());
             String btnOrientation = payload == null ? null : payload.getBtnOrientation();
-            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, btnOrientation, buttons);
+            String hideAvatar = payload == null ? null : payload.getHideAvatar();
+            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, btnOrientation, buttons, hideAvatar);
         }
         return sendMessage(JsonUtils.toJson(message), signHeaders());
     }

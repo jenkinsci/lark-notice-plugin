@@ -28,15 +28,17 @@ public class DingCardMessage extends BaseDingMessage {
         setMsgType("actionCard");
     }
 
-    public static DingCardMessage build(At at, String title, String text, String btnOrientation, List<Button> buttons) {
+    public static DingCardMessage build(At at, String title, String text, String btnOrientation,
+                                        List<Button> buttons, String hideAvatar) {
         ActionCardContent content = new ActionCardContent(title, addAtInfo(text, at, true),
-                null, null, StringUtils.defaultIfBlank(btnOrientation, "1"), buttons);
+                null, null, StringUtils.defaultIfBlank(btnOrientation, "1"), hideAvatar, buttons);
         return new DingCardMessage(at, content);
     }
 
-    public static DingCardMessage build(At at, String title, String text, String singleTitle, String singleUrl) {
+    public static DingCardMessage build(At at, String title, String text, String singleTitle,
+                                        String singleUrl, String hideAvatar) {
         ActionCardContent content = new ActionCardContent(title,
-                addAtInfo(text, at, true), singleTitle, singleUrl, null, null);
+                addAtInfo(text, at, true), singleTitle, singleUrl, null, hideAvatar, null);
         return new DingCardMessage(at, content);
     }
 
@@ -65,6 +67,11 @@ public class DingCardMessage extends BaseDingMessage {
          * 0：按钮竖直排列 1：按钮横向排列
          */
         private String btnOrientation;
+
+        /**
+         * 0：正常显示发消息者头像 1：隐藏发消息者头像
+         */
+        private String hideAvatar;
 
         @JsonProperty("btns")
         private List<Button> buttons;

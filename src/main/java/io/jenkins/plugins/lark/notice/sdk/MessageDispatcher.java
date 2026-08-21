@@ -170,6 +170,7 @@ public class MessageDispatcher {
             case POST -> sender.sendPost(ctx, intent, typed);
             case LINK -> sender.sendLink(ctx, intent, typed);
             case CARD -> sender.sendCard(ctx, intent, typed);
+            case FEED_CARD -> sender.sendFeedCard(ctx, intent, typed);
         };
     }
 

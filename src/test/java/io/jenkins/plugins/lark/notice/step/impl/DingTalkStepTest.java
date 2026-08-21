@@ -155,6 +155,30 @@ public class DingTalkStepTest {
     }
 
     @Test
+    public void feedCardShouldUseCapitalUrlFieldNames() throws Exception {
+        JsonNode body = runAndCapture("robot: 'robot-ding', type: 'FEED_CARD', feedCardLinks: ["
+                + "[title: 'One', messageUrl: 'https://example.com/1/${BUILD_NUMBER}', picUrl: 'https://example.com/1.png'], "
+                + "[title: 'Two', messageUrl: 'https://example.com/2', picUrl: 'https://example.com/2.png']]");
+
+        assertEquals("feedCard", body.path("msgtype").asText());
+        JsonNode links = body.path("feedCard").path("links");
+        assertEquals(2, links.size());
+        assertEquals("One", links.get(0).path("title").asText());
+        // The robot API spells these messageURL / picURL, unlike the link message type.
+        assertEquals("https://example.com/1/1", links.get(0).path("messageURL").asText());
+        assertEquals("https://example.com/1.png", links.get(0).path("picURL").asText());
+        assertTrue(links.get(0).path("messageUrl").isMissingNode());
+    }
+
+    @Test
+    public void hideAvatarShouldReachTheActionCard() throws Exception {
+        JsonNode card = runAndCapture("robot: 'robot-ding', type: 'CARD', title: 'T', text: ['body'], "
+                + "hideAvatar: true").path("actionCard");
+
+        assertEquals("1", card.path("hideAvatar").asText());
+    }
+
+    @Test
     public void atsShouldBeEnvironmentExpanded() throws Exception {
         JsonNode body = runAndCapture("robot: 'robot-ding', type: 'TEXT', text: ['hello'], "
                 + "ats: ['${JOB_NAME}']");

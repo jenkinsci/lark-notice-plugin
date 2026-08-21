@@ -9,9 +9,11 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
+import io.jenkins.plugins.lark.notice.model.FeedCardLinkModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
+import io.jenkins.plugins.lark.notice.sdk.model.ding.DingFeedCardMessage;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.step.AbstractStep;
 import io.jenkins.plugins.lark.notice.tools.Utils;
@@ -19,6 +21,7 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -85,6 +88,16 @@ public class DingTalkStep extends AbstractStep {
      * The list of buttons to be included in the message.
      */
     private List<ButtonModel> buttons;
+
+    /**
+     * Whether to hide the sender avatar on action cards.
+     */
+    private boolean hideAvatar;
+
+    /**
+     * Entries of a FEED_CARD message.
+     */
+    private List<FeedCardLinkModel> feedCardLinks;
 
     /**
      * Creates a DingTalk pipeline step with the target robot and message type.
@@ -198,6 +211,26 @@ public class DingTalkStep extends AbstractStep {
     }
 
     /**
+     * Sets whether the sender avatar is hidden on action cards.
+     *
+     * @param hideAvatar true to hide the avatar
+     */
+    @DataBoundSetter
+    public void setHideAvatar(boolean hideAvatar) {
+        this.hideAvatar = hideAvatar;
+    }
+
+    /**
+     * Sets the entries of a FEED_CARD message.
+     *
+     * @param feedCardLinks feed entries
+     */
+    @DataBoundSetter
+    public void setFeedCardLinks(List<FeedCardLinkModel> feedCardLinks) {
+        this.feedCardLinks = feedCardLinks;
+    }
+
+    /**
      * Sends the message to the specified run, environment variables, and task listener.
      *
      * @param run      The run to send the message to.
@@ -232,10 +265,27 @@ public class DingTalkStep extends AbstractStep {
                 .singleTitle(expandNullable(envVars, singleTitle))
                 .singleUrl(expandNullable(envVars, singleUrl))
                 .btnOrientation(isVerticalButton() ? "0" : "1")
+                .hideAvatar(hideAvatar ? "1" : "0")
+                .feedCardLinks(resolveFeedCardLinks(envVars))
                 .build();
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
 
         return service.send(listener, robotId, ctx, intent, payload);
+    }
+
+    /**
+     * Expands and converts the configured feed entries.
+     *
+     * @param envVars environment variables
+     * @return expanded entries, or {@code null} when none are configured
+     */
+    private List<DingFeedCardMessage.FeedCardLink> resolveFeedCardLinks(EnvVars envVars) {
+        if (CollectionUtils.isEmpty(feedCardLinks)) {
+            return null;
+        }
+        return feedCardLinks.stream()
+                .map(model -> model.toFeedCardLink(value -> expandNullable(envVars, value)))
+                .toList();
     }
 
     @Extension

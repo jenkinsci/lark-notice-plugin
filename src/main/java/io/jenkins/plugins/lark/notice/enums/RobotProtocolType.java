@@ -79,7 +79,8 @@ public enum RobotProtocolType {
         return switch (this) {
             case LARK_COMPATIBLE -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.IMAGE, MsgTypeEnum.SHARE_CHAT,
                     MsgTypeEnum.POST, MsgTypeEnum.MARKDOWN, MsgTypeEnum.CARD);
-            case DING_TALK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK, MsgTypeEnum.CARD);
+            case DING_TALK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK,
+                    MsgTypeEnum.CARD, MsgTypeEnum.FEED_CARD);
             case WECHAT_WORK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK,
                     MsgTypeEnum.POST, MsgTypeEnum.CARD);
         };
