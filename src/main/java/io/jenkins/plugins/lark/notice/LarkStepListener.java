@@ -1,5 +1,6 @@
 package io.jenkins.plugins.lark.notice;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Run;
@@ -8,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jenkinsci.plugins.workflow.flow.StepListener;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.springframework.lang.NonNull;
 
 /**
  * A listener for Jenkins Pipeline steps that merges Pipeline environment variables with the current environment.
