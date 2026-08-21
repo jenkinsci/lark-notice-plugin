@@ -35,6 +35,34 @@ public class WechatWorkStepTest {
     }
 
     @Test
+    public void sourceDescAndQuoteAreaShouldReachThePayload() throws Exception {
+        LarkRobotConfig robot = new LarkRobotConfig("robot-wecom", "WeCom Robot",
+                "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=token", List.of());
+        robot.setProtocolType(RobotProtocolType.WECHAT_WORK);
+        robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
+        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
+
+        FreeStyleProject project = jenkins.createFreeStyleProject("wecom-quote-area");
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        WechatWorkStep step = new WechatWorkStep("robot-wecom", MsgTypeEnum.CARD);
+        step.setSourceDesc("Jenkins ${BUILD_NUMBER}");
+        step.setQuoteTitle("Release");
+        step.setQuoteText("shipped ${BUILD_NUMBER}");
+        step.setQuoteUrl("https://example.com/r/${BUILD_NUMBER}");
+        EnvVars envVars = new EnvVars();
+        envVars.put("BUILD_NUMBER", "7");
+
+        WechatWorkStep.MessageBundle bundle = step.buildMessage(
+                build, envVars, TaskListener.NULL, "robot-wecom");
+
+        assertEquals("Jenkins 7", bundle.payload().getSourceDesc());
+        assertEquals("Release", bundle.payload().getQuoteTitle());
+        assertEquals("shipped 7", bundle.payload().getQuoteText());
+        assertEquals("https://example.com/r/7", bundle.payload().getQuoteUrl());
+    }
+
+    @Test
     public void customCardFieldsShouldOverrideDefaultBuildRows() throws Exception {
         Locale previous = Locale.getDefault();
         try {
