@@ -10,8 +10,10 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
+import io.jenkins.plugins.lark.notice.model.CardFieldModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -69,6 +71,12 @@ public class WechatWorkStep extends AbstractStep {
      * Action buttons used by WeCom template cards.
      */
     private List<ButtonModel> buttons;
+
+    /**
+     * Custom content rows for WeCom template cards.
+     * When set, these override the default build-info rows rendered from the build context.
+     */
+    private List<CardFieldModel> cardFields;
 
     /**
      * Users to mention in text and markdown messages.
@@ -152,6 +160,16 @@ public class WechatWorkStep extends AbstractStep {
     }
 
     /**
+     * Sets the custom card content rows.
+     *
+     * @param cardFields list of card field models
+     */
+    @DataBoundSetter
+    public void setCardFields(List<CardFieldModel> cardFields) {
+        this.cardFields = cardFields;
+    }
+
+    /**
      * Sets the list of users to @mention.
      *
      * @param ats user identifiers to mention
@@ -217,8 +235,20 @@ public class WechatWorkStep extends AbstractStep {
                 .atAll(atAll)
                 .atUserIds(expandAts(envVars))
                 .build();
-        WeComPayload payload = WeComPayload.builder().additionalContent(expandedText).build();
+        WeComPayload payload = WeComPayload.builder()
+                .additionalContent(expandedText)
+                .cardFields(resolveCardFields(envVars))
+                .build();
         return new MessageBundle(ctx, intent, payload);
+    }
+
+    private List<CardField> resolveCardFields(EnvVars envVars) {
+        if (CollectionUtils.isEmpty(cardFields)) {
+            return null;
+        }
+        return cardFields.stream()
+                .map(model -> model.toCardField(value -> expandNullable(envVars, value)))
+                .toList();
     }
 
     private Set<String> expandAts(EnvVars envVars) {

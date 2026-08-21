@@ -11,6 +11,8 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
+import io.jenkins.plugins.lark.notice.model.CardFieldModel;
+import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,6 +28,44 @@ public class WechatWorkStepTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    @Test
+    public void customCardFieldsShouldOverrideDefaultBuildRows() throws Exception {
+        Locale previous = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.US);
+
+            LarkRobotConfig robot = new LarkRobotConfig("robot-wecom", "WeCom Robot",
+                    "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=token", List.of());
+            robot.setProtocolType(RobotProtocolType.WECHAT_WORK);
+            robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
+            robot.setMessageLocaleStrategy(MessageLocaleStrategy.EN_US);
+            LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
+
+            FreeStyleProject project = jenkins.createFreeStyleProject("wecom-card-fields");
+            FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+            WechatWorkStep step = new WechatWorkStep("robot-wecom", MsgTypeEnum.CARD);
+            EnvVars envVars = new EnvVars();
+            envVars.put("RELEASE_URL", "https://example.com/release/1");
+            step.setCardFields(List.of(
+                    new CardFieldModel("版本", "1.2.0", null),
+                    new CardFieldModel("发布单", "详情", "${RELEASE_URL}")));
+
+            WechatWorkStep.MessageBundle bundle = step.buildMessage(
+                    build, envVars, TaskListener.NULL, "robot-wecom");
+
+            List<CardField> fields = bundle.payload().getCardFields();
+            assertNotNull(fields);
+            assertEquals(2, fields.size());
+            assertEquals("版本", fields.get(0).getKeyname());
+            assertEquals("1.2.0", fields.get(0).getValue());
+            assertEquals("发布单", fields.get(1).getKeyname());
+            assertEquals("https://example.com/release/1", fields.get(1).getUrl());
+        } finally {
+            Locale.setDefault(previous);
+        }
+    }
 
     private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
         assertEquals(expectedText, button.getText());
