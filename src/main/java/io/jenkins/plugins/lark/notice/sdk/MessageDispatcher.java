@@ -12,8 +12,13 @@ import io.jenkins.plugins.lark.notice.logging.NoticeLogKey;
 import io.jenkins.plugins.lark.notice.logging.NoticeTrace;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
+import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
+
+import java.util.Map;
 
 /**
  * Dispatches a layered {@link MessageIntent} + {@link PlatformPayload} to the platform sender
@@ -23,6 +28,16 @@ import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
  * @author xm.z
  */
 public class MessageDispatcher {
+
+    private static final Map<Class<? extends PlatformPayload>, RobotProtocolType> PAYLOAD_PROTOCOLS = Map.of(
+            LarkPayload.class, RobotProtocolType.LARK_COMPATIBLE,
+            DingPayload.class, RobotProtocolType.DING_TALK,
+            WeComPayload.class, RobotProtocolType.WECHAT_WORK);
+
+    private static final Map<RobotProtocolType, String> STEP_NAMES = Map.of(
+            RobotProtocolType.LARK_COMPATIBLE, "lark",
+            RobotProtocolType.DING_TALK, "dingTalk",
+            RobotProtocolType.WECHAT_WORK, "wechatWork");
 
     private static final MessageDispatcher INSTANCE = new MessageDispatcher();
 
@@ -85,6 +100,10 @@ public class MessageDispatcher {
         if (unsupported != null) {
             return unsupported;
         }
+        SendResult mismatched = validatePayload(listener, robotId, type, sender, payload);
+        if (mismatched != null) {
+            return mismatched;
+        }
 
         if (robotId != null) {
             NoticeLog.verbose(listener, Messages.dispatcher_log_current_robot(), senderRegistry.findRobotName(robotId));
@@ -139,18 +158,38 @@ public class MessageDispatcher {
     /**
      * Routes a message type to the matching {@code sendX} method on the concrete sender.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private SendResult dispatch(MessageSender sender, MsgTypeEnum type, BuildContext ctx,
-                                MessageIntent intent, PlatformPayload payload) {
+    private <T extends PlatformPayload> SendResult dispatch(MessageSender<T> sender, MsgTypeEnum type,
+                                                            BuildContext ctx, MessageIntent intent,
+                                                            PlatformPayload payload) {
+        T typed = payload == null ? null : sender.payloadType().cast(payload);
         return switch (type) {
-            case TEXT -> sender.sendText(ctx, intent, payload);
-            case MARKDOWN -> sender.sendMarkdown(ctx, intent, payload);
-            case IMAGE -> sender.sendImage(ctx, intent, payload);
-            case SHARE_CHAT -> sender.sendShareChat(ctx, intent, payload);
-            case POST -> sender.sendPost(ctx, intent, payload);
-            case LINK -> sender.sendLink(ctx, intent, payload);
-            case CARD -> sender.sendCard(ctx, intent, payload);
+            case TEXT -> sender.sendText(ctx, intent, typed);
+            case MARKDOWN -> sender.sendMarkdown(ctx, intent, typed);
+            case IMAGE -> sender.sendImage(ctx, intent, typed);
+            case SHARE_CHAT -> sender.sendShareChat(ctx, intent, typed);
+            case POST -> sender.sendPost(ctx, intent, typed);
+            case LINK -> sender.sendLink(ctx, intent, typed);
+            case CARD -> sender.sendCard(ctx, intent, typed);
         };
+    }
+
+    /**
+     * Returns a failure result when the payload does not match what the resolved sender consumes,
+     * otherwise null. This happens when a platform-specific step is pointed at a robot of another
+     * protocol, e.g. {@code wechatWork robot: '<a Lark robot>'}.
+     */
+    private SendResult validatePayload(TaskListener listener, String robotId, MsgTypeEnum type,
+                                       MessageSender<?> sender, PlatformPayload payload) {
+        if (payload == null || sender.payloadType().isInstance(payload)) {
+            return null;
+        }
+        RobotProtocolType senderProtocol = PAYLOAD_PROTOCOLS.get(sender.payloadType());
+        String hint = senderProtocol == null ? "" : String.format(
+                " Robot %s speaks %s; use the %s step for it.",
+                robotId, senderProtocol, STEP_NAMES.get(senderProtocol));
+        return fail(listener, robotId, type, String.format(
+                "Message payload %s does not match the %s robot resolved for id %s.%s",
+                payload.getClass().getSimpleName(), sender.payloadType().getSimpleName(), robotId, hint));
     }
 
     /**

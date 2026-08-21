@@ -23,8 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
 
@@ -77,6 +80,17 @@ public class LarkStep extends AbstractStep {
      * The list of buttons to be included in the message.
      */
     private List<ButtonModel> buttons;
+
+    /**
+     * Users to @mention. Mobile numbers are routed to Lark's at-mobile list, everything else is
+     * treated as an open id.
+     */
+    private Set<String> ats;
+
+    /**
+     * Whether to @mention everyone in the chat.
+     */
+    private boolean atAll;
 
     /**
      * Creates a Lark pipeline step with the target robot and message type.
@@ -170,6 +184,26 @@ public class LarkStep extends AbstractStep {
     }
 
     /**
+     * Sets the list of users to @mention.
+     *
+     * @param ats user identifiers (open id or mobile number)
+     */
+    @DataBoundSetter
+    public void setAts(Set<String> ats) {
+        this.ats = ats == null ? null : new HashSet<>(ats);
+    }
+
+    /**
+     * Sets whether to @mention everyone.
+     *
+     * @param atAll {@code true} to mention everyone
+     */
+    @DataBoundSetter
+    public void setAtAll(boolean atAll) {
+        this.atAll = atAll;
+    }
+
+    /**
      * Sends the message to the specified run, environment variables, and task listener.
      *
      * @param run      The run to send the message to.
@@ -180,11 +214,13 @@ public class LarkStep extends AbstractStep {
     @Override
     public SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener) {
         NoticeOccasionEnum noticeOccasion = NoticeOccasionEnum.getNoticeOccasion(run.getResult());
+        String robotId = envVars.expand(robot);
+        Locale locale = resolveLocale(robotId);
 
         List<Button> resolvedButtons = expandButtons(envVars, buttons);
         if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type)) {
             String jobUrl = rootPath + run.getUrl();
-            resolvedButtons = Utils.createDefaultButtons(jobUrl);
+            resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);
         }
 
         MessageIntent intent = MessageIntent.builder().type(type)
@@ -192,14 +228,15 @@ public class LarkStep extends AbstractStep {
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(envVars.expand(buildText())).buttons(resolvedButtons)
                 .topImg(buildImg(envVars, topImg))
+                .atAll(atAll).atUserIds(expandAts(envVars, ats))
                 .build();
-        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), java.util.Locale.getDefault());
+        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         LarkPayload payload = LarkPayload.builder()
                 .imageKey(imageKey).shareChatId(shareChatId).post(post)
                 .bottomImg(buildImg(envVars, bottomImg))
                 .build();
 
-        return service.send(listener, envVars.expand(robot), ctx, intent, payload);
+        return service.send(listener, robotId, ctx, intent, payload);
     }
 
     /**
@@ -214,11 +251,6 @@ public class LarkStep extends AbstractStep {
             case POST -> JsonUtils.toJson(post);
             default -> Utils.join(text);
         };
-    }
-
-    @Override
-    protected ImgElement buildImg(EnvVars envVars, ImgModel imgModel) {
-        return super.buildImg(envVars, imgModel);
     }
 
     @Extension

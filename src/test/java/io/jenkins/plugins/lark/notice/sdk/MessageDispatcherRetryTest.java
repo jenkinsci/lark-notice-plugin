@@ -38,6 +38,11 @@ public class MessageDispatcherRetryTest {
         AtomicInteger attempts = new AtomicInteger();
         MessageSender<PlatformPayload> sender = new MessageSender<>() {
             @Override
+            public Class<PlatformPayload> payloadType() {
+                return PlatformPayload.class;
+            }
+
+            @Override
             public SendResult sendText(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
                 int count = attempts.incrementAndGet();
                 return count < 3 ? SendResult.fail("fail") : new SendResult(0, "ok", null);
@@ -61,6 +66,11 @@ public class MessageDispatcherRetryTest {
 
         AtomicInteger attempts = new AtomicInteger();
         MessageSender<PlatformPayload> sender = new MessageSender<>() {
+            @Override
+            public Class<PlatformPayload> payloadType() {
+                return PlatformPayload.class;
+            }
+
             @Override
             public SendResult sendText(BuildContext ctx, MessageIntent intent, PlatformPayload payload) {
                 attempts.incrementAndGet();

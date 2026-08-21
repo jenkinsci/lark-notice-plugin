@@ -22,6 +22,11 @@ public class LarkMessageSender extends AbstractMessageSender<LarkPayload> {
         super(robotConfig);
     }
 
+    @Override
+    public Class<LarkPayload> payloadType() {
+        return LarkPayload.class;
+    }
+
     /**
      * Wraps a message body with robot signing fields.
      *

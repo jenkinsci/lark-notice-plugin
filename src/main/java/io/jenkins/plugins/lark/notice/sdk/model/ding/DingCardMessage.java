@@ -56,7 +56,9 @@ public class DingCardMessage extends BaseDingMessage {
 
         /**
          * 点击消息跳转的URL
+         * <p>官方字段名为 {@code singleURL}（大写 URL），与 {@code btns[].actionURL} 一致。
          */
+        @JsonProperty("singleURL")
         private String singleUrl;
 
         /**

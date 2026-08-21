@@ -175,17 +175,13 @@ public class DingMessageSenderTest {
 
         JsonNode card = body().path("actionCard");
         assertEquals("Open", card.path("singleTitle").asText());
-        // Baseline: the field currently serializes as "singleUrl". DingTalk's actionCard parameter
-        // is documented as "singleURL" (see the field's own javadoc), and the sibling button url
-        // carries @JsonProperty("actionURL") — so this spelling is suspect and needs confirming
-        // against the official docs before changing.
-        assertEquals("https://example.com/build", card.path("singleUrl").asText());
-        assertTrue(card.path("singleURL").isMissingNode());
+        // The official custom-robot API spells the jump target singleURL, matching btns[].actionURL.
+        assertEquals("https://example.com/build", card.path("singleURL").asText());
+        assertTrue(card.path("singleUrl").isMissingNode());
         assertTrue(card.path("btns").isMissingNode() || card.path("btns").isNull());
         assertFalse(requestBody.get().contains("Changes"));
-        // Baseline: the single-jump branch drops the security keyword (it re-reads intent.getText()
-        // instead of the keyword-appended local variable), unlike the btns branch above.
-        assertEquals("body", card.path("text").asText());
+        // The single-jump branch appends the security keyword like the btns branch does.
+        assertTrue(card.path("text").asText().contains("body Jenkins"));
     }
 
     @Test

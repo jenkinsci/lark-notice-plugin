@@ -12,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 
+import java.io.Serial;
+
 /**
  * Generic pipeline step executor that delegates real sending logic to {@link AbstractStep}.
  *
@@ -19,6 +21,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
  */
 public class GenericStepExecution<T extends AbstractStep> extends StepExecution {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final transient T step;
@@ -97,6 +100,15 @@ public class GenericStepExecution<T extends AbstractStep> extends StepExecution 
                     NoticeLog.field(NoticeLogKey.STEP, stepName),
                     NoticeLog.field(NoticeLogKey.ERROR_TYPE, e.getClass().getSimpleName()),
                     NoticeLog.field(NoticeLogKey.ERROR, e.getMessage()));
+            // failOnError is the user's statement that notifications must never break the build, so
+            // it has to cover unexpected exceptions too, not just a failed SendResult. Without this
+            // any runtime error in the send path fails the build regardless of the setting.
+            if (step != null && !step.isFailOnError()) {
+                NoticeLog.warning(listener, "%s", NoticeLog.failureMessage(
+                        StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getSimpleName())));
+                context.onSuccess(null);
+                return true;
+            }
             context.onFailure(e);
             return false;
         }

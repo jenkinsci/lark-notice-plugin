@@ -73,6 +73,12 @@ public class WechatWorkStep extends AbstractStep {
     private List<ButtonModel> buttons;
 
     /**
+     * Card header source description, the WeCom {@code source.desc} field. Defaults to a built-in
+     * label when blank.
+     */
+    private String sourceDesc;
+
+    /**
      * Custom content rows for WeCom template cards.
      * When set, these override the default build-info rows rendered from the build context.
      */
@@ -160,6 +166,16 @@ public class WechatWorkStep extends AbstractStep {
     }
 
     /**
+     * Sets the card header source description.
+     *
+     * @param sourceDesc source line text
+     */
+    @DataBoundSetter
+    public void setSourceDesc(String sourceDesc) {
+        this.sourceDesc = sourceDesc;
+    }
+
+    /**
      * Sets the custom card content rows.
      *
      * @param cardFields list of card field models
@@ -215,7 +231,7 @@ public class WechatWorkStep extends AbstractStep {
      */
     MessageBundle buildMessage(Run<?, ?> run, EnvVars envVars, TaskListener listener, String robotId) {
         NoticeOccasionEnum noticeOccasion = NoticeOccasionEnum.getNoticeOccasion(run.getResult());
-        Locale locale = MessageLocaleResolver.resolveForRobotId(robotId);
+        Locale locale = resolveLocale(robotId);
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         String expandedText = envVars.expand(Utils.join(text));
         String jobUrl = rootPath + run.getUrl();
@@ -233,10 +249,11 @@ public class WechatWorkStep extends AbstractStep {
                 .topImg(buildImg(envVars, topImg))
                 .buttons(resolvedButtons)
                 .atAll(atAll)
-                .atUserIds(expandAts(envVars))
+                .atUserIds(expandAts(envVars, ats))
                 .build();
         WeComPayload payload = WeComPayload.builder()
                 .additionalContent(expandedText)
+                .sourceDesc(expandNullable(envVars, sourceDesc))
                 .cardFields(resolveCardFields(envVars))
                 .build();
         return new MessageBundle(ctx, intent, payload);
@@ -249,16 +266,6 @@ public class WechatWorkStep extends AbstractStep {
         return cardFields.stream()
                 .map(model -> model.toCardField(value -> expandNullable(envVars, value)))
                 .toList();
-    }
-
-    private Set<String> expandAts(EnvVars envVars) {
-        if (CollectionUtils.isEmpty(ats)) {
-            return Set.of();
-        }
-        return ats.stream()
-                .map(envVars::expand)
-                .filter(StringUtils::isNotBlank)
-                .collect(Collectors.toSet());
     }
 
     /**

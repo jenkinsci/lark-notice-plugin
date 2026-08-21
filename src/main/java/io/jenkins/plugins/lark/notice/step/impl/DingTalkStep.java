@@ -22,6 +22,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
@@ -207,29 +208,33 @@ public class DingTalkStep extends AbstractStep {
     @Override
     protected SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener) {
         NoticeOccasionEnum noticeOccasion = NoticeOccasionEnum.getNoticeOccasion(run.getResult());
+        String robotId = envVars.expand(robot);
+        Locale locale = resolveLocale(robotId);
 
         List<Button> resolvedButtons = expandButtons(envVars, buttons);
-        if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type) && StringUtils.isNotBlank(singleTitle)) {
+        // Default buttons only make sense on the btns branch; when singleTitle is set the sender
+        // renders a single jump action and ignores the button list entirely.
+        if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type) && StringUtils.isBlank(singleTitle)) {
             String jobUrl = rootPath + run.getUrl();
-            resolvedButtons = Utils.createDefaultButtons(jobUrl);
+            resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);
         }
 
         MessageIntent intent = MessageIntent.builder().type(type)
                 .statusType(noticeOccasion.buildStatus())
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(envVars.expand(Utils.join(text))).buttons(resolvedButtons)
-                .messageUrl(envVars.expand(messageUrl))
-                .picUrl(envVars.expand(picUrl))
-                .atAll(atAll).atUserIds(ats)
+                .messageUrl(expandNullable(envVars, messageUrl))
+                .picUrl(expandNullable(envVars, picUrl))
+                .atAll(atAll).atUserIds(expandAts(envVars, ats))
                 .build();
         DingPayload payload = DingPayload.builder()
-                .singleTitle(envVars.expand(singleTitle))
-                .singleUrl(envVars.expand(singleUrl))
+                .singleTitle(expandNullable(envVars, singleTitle))
+                .singleUrl(expandNullable(envVars, singleUrl))
                 .btnOrientation(isVerticalButton() ? "0" : "1")
                 .build();
-        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), java.util.Locale.getDefault());
+        BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
 
-        return service.send(listener, envVars.expand(robot), ctx, intent, payload);
+        return service.send(listener, robotId, ctx, intent, payload);
     }
 
     @Extension

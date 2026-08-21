@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import hudson.EnvVars;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
@@ -18,6 +19,7 @@ import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.title.TitleElement;
 import jenkins.model.Jenkins;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -27,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -106,6 +109,35 @@ public abstract class AbstractStep extends Step {
     }
 
     /**
+     * Expands environment variables in the @mention identifiers and drops blanks.
+     *
+     * @param envVars environment variables
+     * @param ats     raw identifiers from the step arguments
+     * @return expanded identifiers, never {@code null}
+     */
+    protected Set<String> expandAts(EnvVars envVars, Set<String> ats) {
+        if (CollectionUtils.isEmpty(ats)) {
+            return Set.of();
+        }
+        return ats.stream()
+                .map(envVars::expand)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Resolves the locale to render built-in labels with, honouring the target robot's configured
+     * message locale strategy. All steps must go through this rather than {@link Locale#getDefault()}
+     * so the per-robot setting applies consistently.
+     *
+     * @param robotId resolved robot id
+     * @return locale for this send
+     */
+    protected Locale resolveLocale(String robotId) {
+        return MessageLocaleResolver.resolveForRobotId(robotId);
+    }
+
+    /**
      * Builds the shared {@link BuildContext} for a run.
      *
      * @param run      build run
@@ -114,7 +146,7 @@ public abstract class AbstractStep extends Step {
      * @param locale   locale
      * @return build context
      */
-    protected BuildContext buildContext(Run<?, ?> run, TaskListener listener, BuildStatusEnum status, java.util.Locale locale) {
+    protected BuildContext buildContext(Run<?, ?> run, TaskListener listener, BuildStatusEnum status, Locale locale) {
         RunUser executor = RunUser.getExecutor(run, listener);
         String jobUrl = rootPath + run.getUrl();
         return BuildContext.builder()

@@ -19,6 +19,15 @@ import org.apache.commons.lang3.StringUtils;
 public interface MessageSender<T extends PlatformPayload> {
 
     /**
+     * Returns the payload type this sender consumes. The dispatcher checks the incoming payload
+     * against it before routing, so a mismatched pairing produces a readable failure instead of a
+     * {@link ClassCastException} escaping into the build log.
+     *
+     * @return payload class accepted by this sender
+     */
+    Class<T> payloadType();
+
+    /**
      * Sends a text message.
      *
      * @param ctx     shared build context

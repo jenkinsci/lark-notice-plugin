@@ -26,6 +26,11 @@ public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload>
         super(robotConfig);
     }
 
+    @Override
+    public Class<WeComPayload> payloadType() {
+        return WeComPayload.class;
+    }
+
     private static String withTitle(String title, String text) {
         if (StringUtils.isBlank(title)) {
             return text;
@@ -49,8 +54,10 @@ public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload>
 
     @Override
     public SendResult sendCard(BuildContext ctx, MessageIntent intent, WeComPayload payload) {
-        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
-        WechatWorkTemplateCardMessage message = WechatWorkTemplateCardMessage.build(ctx, intent, payload, text);
+        MessageIntent signed = intent.toBuilder()
+                .text(addKeyWord(intent.getText(), robotConfig.getKeys()))
+                .build();
+        WechatWorkTemplateCardMessage message = WechatWorkTemplateCardMessage.build(ctx, signed, payload);
         return sendMessage(JsonUtils.toJson(message));
     }
 

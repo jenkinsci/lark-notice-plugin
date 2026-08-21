@@ -27,6 +27,11 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
         super(robotConfig);
     }
 
+    @Override
+    public Class<DingPayload> payloadType() {
+        return DingPayload.class;
+    }
+
     protected String[] signHeaders() {
         String[] headers = new String[]{};
         if (StringUtils.isNotBlank(robotConfig.getSign())) {
@@ -67,7 +72,7 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
         String text = addKeyWord(intent.getText(), robotConfig.getKeys());
         String singleTitle = payload == null ? null : payload.getSingleTitle();
         if (StringUtils.isNotBlank(singleTitle)) {
-            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), intent.getText(), singleTitle, payload.getSingleUrl());
+            message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, singleTitle, payload.getSingleUrl());
         } else {
             List<DingCardMessage.Button> buttons = CollectionUtils.isEmpty(intent.getButtons()) ? null : intent.getButtons().stream()
                     .map(button -> new DingCardMessage.Button(button.getText(), button.getUrl()))

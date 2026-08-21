@@ -102,16 +102,17 @@ public class DingTalkStepTest {
     }
 
     /**
-     * Baseline for the inverted default-button condition: the step only synthesises default buttons
-     * when {@code singleTitle} is set, but the sender ignores {@code btns} in exactly that case. So
-     * a CARD without buttons and without singleTitle currently ships no buttons at all.
+     * A CARD without explicit buttons and without singleTitle gets the default changelog/console
+     * buttons, which is the branch the sender actually renders.
      */
     @Test
-    public void cardWithoutButtonsCurrentlyShipsNoButtons() throws Exception {
+    public void cardWithoutButtonsShouldGetDefaultButtons() throws Exception {
         JsonNode card = runAndCapture("robot: 'robot-ding', type: 'CARD', title: 'T', text: ['body']")
                 .path("actionCard");
 
-        assertTrue(card.path("btns").isMissingNode() || card.path("btns").isNull());
+        assertEquals(2, card.path("btns").size());
+        assertTrue(card.path("btns").get(0).path("actionURL").asText().endsWith("changes"));
+        assertTrue(card.path("btns").get(1).path("actionURL").asText().endsWith("console"));
         assertTrue(card.path("singleTitle").isMissingNode() || card.path("singleTitle").isNull());
     }
 
@@ -127,18 +128,26 @@ public class DingTalkStepTest {
     }
 
     /**
-     * Baseline for the {@code singleURL} spelling bug: the official robot API documents
-     * {@code actionCard.singleURL}, but the model serialises it as {@code singleUrl}, so the jump
-     * target is dropped by DingTalk. Also pins the keyword loss on this branch.
+     * With singleTitle set the sender renders a single jump action and ignores buttons, so the step
+     * must not synthesise defaults, and the jump target must use the official singleURL spelling.
      */
     @Test
-    public void cardWithSingleTitleCurrentlyEmitsWrongUrlFieldName() throws Exception {
+    public void cardWithSingleTitleShouldEmitSingleUrlAndNoButtons() throws Exception {
         JsonNode card = runAndCapture("robot: 'robot-ding', type: 'CARD', title: 'T', text: ['body'], "
                 + "singleTitle: 'Open', singleUrl: 'https://example.com/b'")
                 .path("actionCard");
 
         assertEquals("Open", card.path("singleTitle").asText());
-        assertEquals("https://example.com/b", card.path("singleUrl").asText());
-        assertTrue(card.path("singleURL").isMissingNode());
+        assertEquals("https://example.com/b", card.path("singleURL").asText());
+        assertTrue(card.path("singleUrl").isMissingNode());
+        assertTrue(card.path("btns").isMissingNode() || card.path("btns").isNull());
+    }
+
+    @Test
+    public void atsShouldBeEnvironmentExpanded() throws Exception {
+        JsonNode body = runAndCapture("robot: 'robot-ding', type: 'TEXT', text: ['hello'], "
+                + "ats: ['${JOB_NAME}']");
+
+        assertTrue(body.path("at").path("atUserIds").get(0).asText().startsWith("ding-"));
     }
 }

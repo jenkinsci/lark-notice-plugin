@@ -62,11 +62,10 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
      * @param ctx     shared build context supplying default card rows when the payload does not override them
      * @param intent  cross-platform rendering intent (title, images, buttons, click-through URL)
      * @param payload WeCom-specific payload (custom card rows, source description, additional content)
-     * @param content raw markdown/plain text used as vertical content fallback
      * @return assembled template card message
      */
     public static WechatWorkTemplateCardMessage build(BuildContext ctx, MessageIntent intent,
-                                                      WeComPayload payload, String content) {
+                                                      WeComPayload payload) {
         String title = StringUtils.defaultIfBlank(intent.getTitle(), DEFAULT_TITLE);
         String actionUrl = StringUtils.defaultIfBlank(resolveActionUrl(intent), ctx.getJobUrl());
         TemplateCard card = new TemplateCard();
@@ -75,7 +74,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         card.setMainTitle(new MainTitle(title, null));
         card.setCardImage(buildCardImage(intent));
         card.setHorizontalContentList(resolveHorizontalContentList(ctx, payload));
-        card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload, content));
+        card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload));
         card.setJumpList(resolveJumpList(intent));
         card.setCardAction(new CardAction(LINK_TYPE, actionUrl));
         return new WechatWorkTemplateCardMessage(card);
@@ -167,7 +166,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
     }
 
     private static List<VerticalContent> resolveVerticalContentList(BuildContext ctx, MessageIntent intent,
-                                                                    WeComPayload payload, String content) {
+                                                                    WeComPayload payload) {
         if (StringUtils.isNotBlank(payload.getAdditionalContent())) {
             return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), payload.getAdditionalContent()));
         }
@@ -176,7 +175,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         if (hasStructuredBuildFields(ctx)) {
             return null;
         }
-        String plainText = toPlainText(content);
+        String plainText = toPlainText(intent.getText());
         if (StringUtils.isBlank(plainText)) {
             return null;
         }
