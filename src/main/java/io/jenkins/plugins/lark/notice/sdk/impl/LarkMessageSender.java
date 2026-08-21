@@ -53,13 +53,13 @@ public class LarkMessageSender extends AbstractMessageSender<LarkPayload> {
 
     @Override
     public SendResult sendImage(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
-        LarkImageMessage message = LarkImageMessage.build(intent.getText());
+        LarkImageMessage message = LarkImageMessage.build(payload == null ? null : payload.getImageKey());
         return sendMessage(signToJson(message));
     }
 
     @Override
     public SendResult sendShareChat(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
-        LarkShareChatMessage message = LarkShareChatMessage.build(intent.getText());
+        LarkShareChatMessage message = LarkShareChatMessage.build(payload == null ? null : payload.getShareChatId());
         return sendMessage(signToJson(message));
     }
 
@@ -75,7 +75,7 @@ public class LarkMessageSender extends AbstractMessageSender<LarkPayload> {
     @Override
     public SendResult sendPost(BuildContext ctx, MessageIntent intent, LarkPayload payload) {
         String title = addKeyWord(intent.getTitle(), robotConfig.getKeys());
-        LarkPostMessage message = LarkPostMessage.build(title, intent.getText());
+        LarkPostMessage message = LarkPostMessage.build(title, payload == null ? null : payload.getPost());
         return sendMessage(signToJson(message));
     }
 

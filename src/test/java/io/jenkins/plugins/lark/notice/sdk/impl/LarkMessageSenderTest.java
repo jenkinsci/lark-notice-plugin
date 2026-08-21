@@ -123,10 +123,11 @@ public class LarkMessageSenderTest {
     }
 
     @Test
-    public void sendImageShouldReadImageKeyFromTextField() {
-        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.IMAGE).text("img_v2_key").build();
+    public void sendImageShouldReadImageKeyFromPayload() {
+        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.IMAGE).text("body text").build();
 
-        sender().sendImage(BuildContext.builder().build(), intent, LarkPayload.builder().imageKey("ignored").build());
+        sender().sendImage(BuildContext.builder().build(), intent,
+                LarkPayload.builder().imageKey("img_v2_key").build());
 
         JsonNode body = body();
         assertEquals("image", body.path("msg_type").asText());
@@ -134,11 +135,11 @@ public class LarkMessageSenderTest {
     }
 
     @Test
-    public void sendShareChatShouldReadChatIdFromTextField() {
-        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.SHARE_CHAT).text("oc_chat").build();
+    public void sendShareChatShouldReadChatIdFromPayload() {
+        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.SHARE_CHAT).text("body text").build();
 
         sender().sendShareChat(BuildContext.builder().build(), intent,
-                LarkPayload.builder().shareChatId("ignored").build());
+                LarkPayload.builder().shareChatId("oc_chat").build());
 
         JsonNode body = body();
         assertEquals("share_chat", body.path("msg_type").asText());
@@ -146,12 +147,12 @@ public class LarkMessageSenderTest {
     }
 
     @Test
-    public void sendPostShouldReadSerializedPostFromTextField() {
+    public void sendPostShouldReadStructuredPostFromPayload() {
         List<List<Map<String, String>>> post = List.of(List.of(Map.of("tag", "text", "text", "line one")));
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.POST)
                 .title("Build")
-                .text(JsonUtils.toJson(post))
+                .text("body text")
                 .build();
 
         sender().sendPost(BuildContext.builder().build(), intent, LarkPayload.builder().post(post).build());

@@ -16,14 +16,15 @@ import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement;
 import io.jenkins.plugins.lark.notice.step.AbstractStep;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import io.jenkins.plugins.lark.notice.tools.Utils;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -189,8 +190,8 @@ public class LarkStep extends AbstractStep {
      * @param ats user identifiers (open id or mobile number)
      */
     @DataBoundSetter
-    public void setAts(Set<String> ats) {
-        this.ats = ats == null ? null : new HashSet<>(ats);
+    public void setAts(List<String> ats) {
+        this.ats = ats == null ? new HashSet<>() : new HashSet<>(ats);
     }
 
     /**
@@ -226,13 +227,15 @@ public class LarkStep extends AbstractStep {
         MessageIntent intent = MessageIntent.builder().type(type)
                 .statusType(noticeOccasion.buildStatus())
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
-                .text(envVars.expand(buildText())).buttons(resolvedButtons)
+                .text(envVars.expand(Utils.join(text))).buttons(resolvedButtons)
                 .topImg(buildImg(envVars, topImg))
                 .atAll(atAll).atUserIds(expandAts(envVars, ats))
                 .build();
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         LarkPayload payload = LarkPayload.builder()
-                .imageKey(imageKey).shareChatId(shareChatId).post(post)
+                .imageKey(expandNullable(envVars, imageKey))
+                .shareChatId(expandNullable(envVars, shareChatId))
+                .post(expandPost(envVars))
                 .bottomImg(buildImg(envVars, bottomImg))
                 .build();
 
@@ -240,17 +243,36 @@ public class LarkStep extends AbstractStep {
     }
 
     /**
-     * Constructs the message content to be sent based on the message type.
+     * Expands environment variables inside every segment value of the rich-text body. The whole
+     * structure used to be serialised into the shared text field and expanded as one string, so
+     * expansion has to happen per value here to keep {@code ${VAR}} working inside post content.
      *
-     * @return The message content to be sent.
+     * @param envVars environment variables
+     * @return expanded rich-text structure, or {@code null} when no post body is set
      */
-    private String buildText() {
-        return switch (type) {
-            case IMAGE -> imageKey;
-            case SHARE_CHAT -> shareChatId;
-            case POST -> JsonUtils.toJson(post);
-            default -> Utils.join(text);
-        };
+    private List<List<Map<String, String>>> expandPost(EnvVars envVars) {
+        if (post == null) {
+            return null;
+        }
+        List<List<Map<String, String>>> expanded = new ArrayList<>(post.size());
+        for (List<Map<String, String>> region : post) {
+            if (region == null) {
+                expanded.add(null);
+                continue;
+            }
+            List<Map<String, String>> segments = new ArrayList<>(region.size());
+            for (Map<String, String> segment : region) {
+                if (segment == null) {
+                    segments.add(null);
+                    continue;
+                }
+                Map<String, String> copy = new LinkedHashMap<>();
+                segment.forEach((key, value) -> copy.put(key, expandNullable(envVars, value)));
+                segments.add(copy);
+            }
+            expanded.add(segments);
+        }
+        return expanded;
     }
 
     @Extension

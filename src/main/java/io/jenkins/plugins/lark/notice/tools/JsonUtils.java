@@ -112,6 +112,17 @@ public final class JsonUtils {
     }
 
     /**
+     * Converts a value into a JSON tree of whatever shape it maps to (array, object or scalar).
+     * Unlike {@link #valueToTree(Object)} this does not assume the result is an object.
+     *
+     * @param fromValue source object
+     * @return converted node, or {@code null} when the input is {@code null}
+     */
+    public static JsonNode toTree(Object fromValue) {
+        return fromValue == null ? null : mapper().valueToTree(fromValue);
+    }
+
+    /**
      * Validates whether the provided string is syntactically valid JSON.
      *
      * @param jsonString raw JSON string

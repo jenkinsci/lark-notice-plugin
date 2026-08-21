@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 富文本消息 类型
@@ -30,6 +32,22 @@ public class LarkPostMessage extends BaseLarkMessage {
         Content content = new Content();
         content.setTitle(title);
         content.setContent(JsonUtils.readTree(text));
+        RichText richText = new RichText(content);
+        PostContent postContent = new PostContent(richText);
+        return new LarkPostMessage(postContent);
+    }
+
+    /**
+     * Builds a post message from the structured rich-text body, without a JSON string round trip.
+     *
+     * @param title post title
+     * @param post  nested region/segment structure
+     * @return post message
+     */
+    public static LarkPostMessage build(String title, List<List<Map<String, String>>> post) {
+        Content content = new Content();
+        content.setTitle(title);
+        content.setContent(JsonUtils.toTree(post));
         RichText richText = new RichText(content);
         PostContent postContent = new PostContent(richText);
         return new LarkPostMessage(postContent);
