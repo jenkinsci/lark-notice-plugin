@@ -8,7 +8,6 @@ import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement
 import io.jenkins.plugins.lark.notice.tools.Utils;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
  * @author xm.z
  */
 @Getter
-@Setter
 @ToString
 @Builder(toBuilder = true)
 public class MessageIntent {

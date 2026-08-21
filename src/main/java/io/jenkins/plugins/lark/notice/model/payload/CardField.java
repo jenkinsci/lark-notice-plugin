@@ -43,19 +43,11 @@ public class CardField {
     private String url;
 
     /**
-     * Optional explicit type; when null it is derived from whether {@link #url} is set.
-     */
-    private Integer type;
-
-    /**
-     * Resolves the content type, deriving it from {@link #url} when {@link #type} is unset.
+     * Resolves the content type from whether {@link #url} is set.
      *
      * @return {@link #TEXT_TYPE} or {@link #LINK_TYPE}
      */
     public int resolveType() {
-        if (type != null) {
-            return type;
-        }
         return (url == null || url.isBlank()) ? TEXT_TYPE : LINK_TYPE;
     }
 }
