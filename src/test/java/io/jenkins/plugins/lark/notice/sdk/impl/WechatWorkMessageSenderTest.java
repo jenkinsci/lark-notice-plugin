@@ -266,6 +266,47 @@ public class WechatWorkMessageSenderTest {
     }
 
     @Test
+    public void quoteAreaShouldBeOmittedUnlessConfigured() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.CARD).title("T")
+                .statusType(BuildStatusEnum.SUCCESS).build();
+        BuildContext ctx = BuildContext.builder().locale(Locale.US).build();
+
+        sender.sendCard(ctx, intent, WeComPayload.builder().build());
+        assertFalse(JsonUtils.readTree(requestBody.get()).path("template_card").has("quote_area"));
+
+        sender.sendCard(ctx, intent, WeComPayload.builder()
+                .quoteTitle("Release note").quoteText("v1.2.0 shipped")
+                .quoteUrl("https://example.com/release").build());
+
+        JsonNode quote = JsonUtils.readTree(requestBody.get()).path("template_card").path("quote_area");
+        assertEquals(1, quote.path("type").asInt());
+        assertEquals("https://example.com/release", quote.path("url").asText());
+        assertEquals("Release note", quote.path("title").asText());
+        assertEquals("v1.2.0 shipped", quote.path("quote_text").asText());
+    }
+
+    @Test
+    public void quoteAreaWithoutUrlShouldHaveNoClickAction() {
+        RobotConfigModel robotConfig = new RobotConfigModel();
+        robotConfig.setRobotType(RobotType.WECHAT_WORK);
+        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
+        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
+
+        sender.sendCard(BuildContext.builder().locale(Locale.US).build(),
+                MessageIntent.builder().type(MsgTypeEnum.CARD).title("T").build(),
+                WeComPayload.builder().quoteText("no link").build());
+
+        JsonNode quote = JsonUtils.readTree(requestBody.get()).path("template_card").path("quote_area");
+        assertEquals(0, quote.path("type").asInt());
+        assertEquals("no link", quote.path("quote_text").asText());
+    }
+
+    @Test
     public void cardImageShouldUsePicUrlWhenProvided() {
         RobotConfigModel robotConfig = new RobotConfigModel();
         robotConfig.setRobotType(RobotType.WECHAT_WORK);

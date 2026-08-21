@@ -25,4 +25,19 @@ public class WeComPayload implements PlatformPayload {
      * Customizable source description shown in the card header source line.
      */
     private final String sourceDesc;
+
+    /**
+     * Title of the {@code quote_area} block.
+     */
+    private final String quoteTitle;
+
+    /**
+     * Body text of the {@code quote_area} block.
+     */
+    private final String quoteText;
+
+    /**
+     * Jump target of the {@code quote_area} block. When set the block becomes clickable.
+     */
+    private final String quoteUrl;
 }

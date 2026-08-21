@@ -1,5 +1,6 @@
 package io.jenkins.plugins.lark.notice.sdk.model.wechat;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.model.*;
@@ -70,6 +71,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         card.setCardImage(buildCardImage(intent));
         card.setHorizontalContentList(resolveHorizontalContentList(ctx, intent));
         card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload));
+        card.setQuoteArea(resolveQuoteArea(payload));
         card.setJumpList(resolveJumpList(intent));
         card.setCardAction(new CardAction(LINK_TYPE, actionUrl));
         return new WechatWorkTemplateCardMessage(card);
@@ -109,6 +111,20 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
     private static boolean isHttpUrl(String value) {
         String url = StringUtils.trimToEmpty(value);
         return StringUtils.startsWith(url, "https://") || StringUtils.startsWith(url, "http://");
+    }
+
+    /**
+     * Builds the quote block when the payload carries any of its parts. {@code type} is derived:
+     * 1 (jump to url) when a url is present, otherwise 0 (no click action).
+     */
+    private static QuoteArea resolveQuoteArea(WeComPayload payload) {
+        String title = payload.getQuoteTitle();
+        String text = payload.getQuoteText();
+        String url = payload.getQuoteUrl();
+        if (StringUtils.isAllBlank(title, text, url)) {
+            return null;
+        }
+        return new QuoteArea(StringUtils.isNotBlank(url) ? LINK_TYPE : TEXT_TYPE, url, title, text);
     }
 
     private static List<Jump> resolveJumpList(MessageIntent intent) {
@@ -199,6 +215,12 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         @JsonProperty("jump_list")
         private List<Jump> jumpList;
 
+        // Omitted entirely when unset: an existing assertion pins quote_area's absence, and WeCom
+        // has no use for an explicitly null block.
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonProperty("quote_area")
+        private QuoteArea quoteArea;
+
         @JsonProperty("card_action")
         private CardAction cardAction;
     }
@@ -272,6 +294,25 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         private String url;
 
         private String title;
+    }
+
+    /**
+     * WeCom {@code quote_area}: a quoted-reference block with an optional jump target.
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuoteArea implements Serializable {
+
+        private Integer type;
+
+        private String url;
+
+        private String title;
+
+        @JsonProperty("quote_text")
+        private String quoteText;
+
     }
 
     @Data

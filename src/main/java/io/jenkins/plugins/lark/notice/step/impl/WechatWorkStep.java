@@ -74,6 +74,21 @@ public class WechatWorkStep extends AbstractStep {
     private String sourceDesc;
 
     /**
+     * Title of the card's quote block, the WeCom {@code quote_area.title} field.
+     */
+    private String quoteTitle;
+
+    /**
+     * Body of the card's quote block, the WeCom {@code quote_area.quote_text} field.
+     */
+    private String quoteText;
+
+    /**
+     * Jump target of the card's quote block, the WeCom {@code quote_area.url} field.
+     */
+    private String quoteUrl;
+
+    /**
      * Users to mention in text and markdown messages.
      */
     private Set<String> ats;
@@ -165,6 +180,36 @@ public class WechatWorkStep extends AbstractStep {
     }
 
     /**
+     * Sets the card quote block title.
+     *
+     * @param quoteTitle quote title
+     */
+    @DataBoundSetter
+    public void setQuoteTitle(String quoteTitle) {
+        this.quoteTitle = quoteTitle;
+    }
+
+    /**
+     * Sets the card quote block body.
+     *
+     * @param quoteText quote body
+     */
+    @DataBoundSetter
+    public void setQuoteText(String quoteText) {
+        this.quoteText = quoteText;
+    }
+
+    /**
+     * Sets the card quote block jump target.
+     *
+     * @param quoteUrl quote URL
+     */
+    @DataBoundSetter
+    public void setQuoteUrl(String quoteUrl) {
+        this.quoteUrl = quoteUrl;
+    }
+
+    /**
      * Sets the list of users to @mention.
      *
      * @param ats user identifiers to mention
@@ -234,6 +279,9 @@ public class WechatWorkStep extends AbstractStep {
         WeComPayload payload = WeComPayload.builder()
                 .additionalContent(expandedText)
                 .sourceDesc(expandNullable(envVars, sourceDesc))
+                .quoteTitle(expandNullable(envVars, quoteTitle))
+                .quoteText(expandNullable(envVars, quoteText))
+                .quoteUrl(expandNullable(envVars, quoteUrl))
                 .build();
         return new MessageBundle(ctx, intent, payload);
     }
