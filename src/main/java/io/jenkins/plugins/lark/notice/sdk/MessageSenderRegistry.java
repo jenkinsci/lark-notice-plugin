@@ -3,6 +3,7 @@ package io.jenkins.plugins.lark.notice.sdk;
 import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +18,7 @@ public class MessageSenderRegistry {
 
     private static final MessageSenderRegistry INSTANCE = new MessageSenderRegistry();
 
-    private transient Map<String, MessageSender> senders = new ConcurrentHashMap<>();
+    private transient Map<String, MessageSender<? extends PlatformPayload>> senders = new ConcurrentHashMap<>();
 
     private MessageSenderRegistry() {
         // singleton
@@ -38,7 +39,7 @@ public class MessageSenderRegistry {
      * @param robotId target robot id
      * @return cached or newly created sender; {@code null} when the robot does not exist
      */
-    public MessageSender resolve(String robotId) {
+    public MessageSender<? extends PlatformPayload> resolve(String robotId) {
         return cache().computeIfAbsent(robotId, this::createSender);
     }
 
@@ -74,7 +75,7 @@ public class MessageSenderRegistry {
      * @param robotId robot id
      * @return sender instance, or {@code null} when no matching robot exists
      */
-    private MessageSender createSender(String robotId) {
+    private MessageSender<? extends PlatformPayload> createSender(String robotId) {
         return LarkGlobalConfig.getRobot(robotId)
                 .flatMap(robotConfig -> robotConfig.obtainRobotType().map(robotType -> {
                     RobotConfigModel robotConfigModel = RobotConfigModel.of(
@@ -91,7 +92,7 @@ public class MessageSenderRegistry {
      *
      * @return mutable sender cache
      */
-    private Map<String, MessageSender> cache() {
+    private Map<String, MessageSender<? extends PlatformPayload>> cache() {
         if (senders == null) {
             senders = new ConcurrentHashMap<>(8);
         }

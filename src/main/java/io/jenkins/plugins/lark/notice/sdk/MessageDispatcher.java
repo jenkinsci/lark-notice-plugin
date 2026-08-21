@@ -17,6 +17,7 @@ import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class MessageDispatcher {
     }
 
     /**
-     * Resolves a sender for the robot and dispatches the message.
+     * Resolves the target for the robot from saved configuration and dispatches the message.
      *
      * @param listener task listener
      * @param robotId  target robot id
@@ -67,23 +68,25 @@ public class MessageDispatcher {
      */
     public SendResult send(TaskListener listener, String robotId, BuildContext ctx,
                            MessageIntent intent, PlatformPayload payload) {
-        MessageSender<?> sender = senderRegistry.resolve(robotId);
-        return send(listener, robotId, ctx, intent, payload, sender);
+        return send(listener, ctx, intent, payload, resolveTarget(robotId));
     }
 
     /**
-     * Dispatches using a pre-resolved sender, bypassing registry resolution.
+     * Dispatches to an explicitly resolved target. Callers working from unsaved configuration —
+     * the robot config test button — build the target themselves so the protocol and retry policy
+     * match the sender rather than whatever is currently persisted.
      *
      * @param listener task listener
-     * @param robotId  robot id for logging
      * @param ctx      shared build context
      * @param intent   cross-platform rendering intent
      * @param payload  platform-specific payload
-     * @param sender   prepared sender
+     * @param target   resolved destination
      * @return send result
      */
-    public SendResult send(TaskListener listener, String robotId, BuildContext ctx,
-                           MessageIntent intent, PlatformPayload payload, MessageSender<?> sender) {
+    public SendResult send(TaskListener listener, BuildContext ctx, MessageIntent intent,
+                           PlatformPayload payload, DispatchTarget target) {
+        String robotId = target == null ? null : target.robotId();
+        MessageSender<? extends PlatformPayload> sender = target == null ? null : target.sender();
         if (sender == null) {
             return fail(listener, robotId, null, String.format(Messages.dispatcher_error_robot_not_exist(), robotId));
         }
@@ -95,8 +98,7 @@ public class MessageDispatcher {
             return fail(listener, robotId, null, Messages.dispatcher_error_message_type_missing());
         }
 
-        RobotProtocolType protocol = resolveProtocol(robotId);
-        SendResult unsupported = validateSupport(listener, robotId, type, protocol);
+        SendResult unsupported = validateSupport(listener, robotId, type, target.protocol());
         if (unsupported != null) {
             return unsupported;
         }
@@ -105,11 +107,13 @@ public class MessageDispatcher {
             return mismatched;
         }
 
-        if (robotId != null) {
-            NoticeLog.verbose(listener, Messages.dispatcher_log_current_robot(), senderRegistry.findRobotName(robotId));
+        if (StringUtils.isNotBlank(target.robotName())) {
+            NoticeLog.verbose(listener, Messages.dispatcher_log_current_robot(), target.robotName());
         }
 
-        RetryPolicy retryPolicy = resolveRetryPolicy(robotId);
+        RetryPolicy retryPolicy = target.retryPolicy() == null
+                ? RetryPolicy.from(LarkRetryConfig.defaultConfig())
+                : target.retryPolicy();
         int maxAttempts = retryPolicy.getMaxAttempts();
         int attempt = 1;
         SendResult sendResult = null;
@@ -202,6 +206,21 @@ public class MessageDispatcher {
                     String.format("Message type %s is not supported by %s robots.", type, protocol));
         }
         return null;
+    }
+
+    /**
+     * Builds a dispatch target from the saved global configuration for a robot id.
+     *
+     * @param robotId robot id
+     * @return resolved target; its sender is {@code null} when no such robot exists
+     */
+    DispatchTarget resolveTarget(String robotId) {
+        MessageSender<? extends PlatformPayload> sender = senderRegistry.resolve(robotId);
+        return new DispatchTarget(robotId,
+                senderRegistry.findRobotName(robotId).orElse(null),
+                resolveProtocol(robotId),
+                resolveRetryPolicy(robotId),
+                sender);
     }
 
     private RobotProtocolType resolveProtocol(String robotId) {

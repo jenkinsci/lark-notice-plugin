@@ -7,6 +7,8 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.*;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
+import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
+import io.jenkins.plugins.lark.notice.sdk.DispatchTarget;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -122,7 +124,8 @@ public class WechatWorkMessageSenderTest {
                 .build();
         WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+                new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
         JsonNode root = JsonUtils.readTree(requestBody.get());
@@ -178,7 +181,8 @@ public class WechatWorkMessageSenderTest {
                 .build();
         WeComPayload payload = WeComPayload.builder().additionalContent("custom release notes").build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+                new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
         JsonNode card = JsonUtils.readTree(requestBody.get()).path("template_card");
@@ -213,7 +217,8 @@ public class WechatWorkMessageSenderTest {
                 .build();
         WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+                new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
         JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
@@ -256,7 +261,8 @@ public class WechatWorkMessageSenderTest {
                 .build();
         WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+                new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
         JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
@@ -323,7 +329,8 @@ public class WechatWorkMessageSenderTest {
         BuildContext ctx = BuildContext.builder().locale(Locale.US).build();
         WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+                new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
         JsonNode cardImage = JsonUtils.readTree(requestBody.get()).path("template_card").path("card_image");

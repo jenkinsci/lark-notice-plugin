@@ -1,6 +1,7 @@
 package io.jenkins.plugins.lark.notice.enums;
 
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
+import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
 import io.jenkins.plugins.lark.notice.sdk.MessageSender;
 import io.jenkins.plugins.lark.notice.sdk.impl.DingMessageSender;
 import io.jenkins.plugins.lark.notice.sdk.impl.LarkMessageSender;
@@ -26,7 +27,7 @@ public enum RobotType {
          * {@inheritDoc}
          */
         @Override
-        public MessageSender obtainInstance(RobotConfigModel robotConfig) {
+        public MessageSender<? extends PlatformPayload> obtainInstance(RobotConfigModel robotConfig) {
             return new LarkMessageSender(robotConfig);
         }
     },
@@ -36,7 +37,7 @@ public enum RobotType {
          * {@inheritDoc}
          */
         @Override
-        public MessageSender obtainInstance(RobotConfigModel robotConfig) {
+        public MessageSender<? extends PlatformPayload> obtainInstance(RobotConfigModel robotConfig) {
             return new DingMessageSender(robotConfig);
         }
     },
@@ -46,7 +47,7 @@ public enum RobotType {
          * {@inheritDoc}
          */
         @Override
-        public MessageSender obtainInstance(RobotConfigModel robotConfig) {
+        public MessageSender<? extends PlatformPayload> obtainInstance(RobotConfigModel robotConfig) {
             return new WechatWorkMessageSender(robotConfig);
         }
     };
@@ -104,7 +105,7 @@ public enum RobotType {
      * @param robotConfig robot configuration
      * @return message sender bound to the target platform
      */
-    public abstract MessageSender obtainInstance(RobotConfigModel robotConfig);
+    public abstract MessageSender<? extends PlatformPayload> obtainInstance(RobotConfigModel robotConfig);
 
     /**
      * Maps a build status color to the markdown color names supported by this platform.

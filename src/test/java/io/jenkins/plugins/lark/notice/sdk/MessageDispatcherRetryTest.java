@@ -33,8 +33,6 @@ public class MessageDispatcherRetryTest {
     @Test
     public void shouldRetryUntilSuccess() {
         RetryPolicy policy = RetryPolicy.from(new LarkRetryConfig(true, 3, 0, 0, 1.0, 0.0));
-        TestDispatcher dispatcher = new TestDispatcher(policy);
-
         AtomicInteger attempts = new AtomicInteger();
         MessageSender<PlatformPayload> sender = new MessageSender<>() {
             @Override
@@ -54,7 +52,8 @@ public class MessageDispatcherRetryTest {
             }
         };
 
-        SendResult result = dispatcher.send(null, null, context(), textIntent(), payload(), sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, context(), textIntent(), payload(),
+                new DispatchTarget(null, null, null, policy, sender));
         assertTrue(result.isOk());
         assertEquals(3, attempts.get());
     }
@@ -62,8 +61,6 @@ public class MessageDispatcherRetryTest {
     @Test
     public void shouldStopAfterMaxAttempts() {
         RetryPolicy policy = RetryPolicy.from(new LarkRetryConfig(true, 2, 0, 0, 1.0, 0.0));
-        TestDispatcher dispatcher = new TestDispatcher(policy);
-
         AtomicInteger attempts = new AtomicInteger();
         MessageSender<PlatformPayload> sender = new MessageSender<>() {
             @Override
@@ -83,22 +80,10 @@ public class MessageDispatcherRetryTest {
             }
         };
 
-        SendResult result = dispatcher.send(null, null, context(), textIntent(), payload(), sender);
+        SendResult result = MessageDispatcher.getInstance().send(null, context(), textIntent(), payload(),
+                new DispatchTarget(null, null, null, policy, sender));
         assertFalse(result.isOk());
         assertEquals(2, attempts.get());
     }
 
-    private static final class TestDispatcher extends MessageDispatcher {
-        private final RetryPolicy retryPolicy;
-
-        private TestDispatcher(RetryPolicy retryPolicy) {
-            super(MessageSenderRegistry.getInstance());
-            this.retryPolicy = retryPolicy;
-        }
-
-        @Override
-        RetryPolicy resolveRetryPolicy(String robotId) {
-            return retryPolicy;
-        }
-    }
 }

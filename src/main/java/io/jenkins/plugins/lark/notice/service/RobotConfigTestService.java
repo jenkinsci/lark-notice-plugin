@@ -10,8 +10,10 @@ import io.jenkins.plugins.lark.notice.model.BuildJobModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
+import io.jenkins.plugins.lark.notice.sdk.DispatchTarget;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.MessageSender;
+import io.jenkins.plugins.lark.notice.sdk.RetryPolicy;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.tools.ApiResponse;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
@@ -65,7 +67,8 @@ public final class RobotConfigTestService {
             }
             RobotType robotType = robotTypeOpt.get();
 
-            MessageSender sender = robotType.obtainInstance(RobotConfigModel.of(robotConfig, proxySelector));
+            MessageSender<? extends PlatformPayload> sender =
+                    robotType.obtainInstance(RobotConfigModel.of(robotConfig, proxySelector));
             Locale testLocale = MessageLocaleResolver.resolve(robotConfig);
             BuildJobModel buildJobModel = buildTestJobModel(testLocale);
             RobotProtocolType protocol = RobotProtocolType.fromRobotType(robotType);
@@ -73,8 +76,15 @@ public final class RobotConfigTestService {
                     .text(buildJobModel.toMarkdown(robotType, testLocale)).atAll(false).build();
             BuildContext buildCtx = buildJobModel.buildContext(testLocale);
             PlatformPayload payload = buildJobModel.cardPayload(protocol);
+            // Everything here comes from the submitted form, which may not match — or may not yet
+            // exist in — the saved configuration, so the target is built from the same values as
+            // the sender instead of letting the dispatcher look up the persisted robot. The test
+            // send also deliberately uses the default (retry-disabled) policy: the form carries no
+            // retry settings, and a config check should report the first failure immediately.
+            DispatchTarget target = new DispatchTarget(robotConfig.getId(), robotConfig.getName(),
+                    protocol, RetryPolicy.from(LarkRetryConfig.defaultConfig()), sender);
             SendResult sendResult = Objects.requireNonNull(MessageDispatcher.getInstance()
-                    .send(null, robotConfig.getId(), buildCtx, intent, payload, sender), "sendResult");
+                    .send(null, buildCtx, intent, payload, target), "sendResult");
             boolean ok = sendResult.isOk();
             String detail = sendResult.getMsg();
             String message = ok
