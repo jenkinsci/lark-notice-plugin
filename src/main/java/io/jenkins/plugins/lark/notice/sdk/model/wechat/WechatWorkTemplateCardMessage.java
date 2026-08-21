@@ -2,8 +2,9 @@ package io.jenkins.plugins.lark.notice.sdk.model.wechat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
-import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.BuildField;
+import io.jenkins.plugins.lark.notice.model.BuildFields;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
@@ -141,14 +142,17 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
                     .map(WechatWorkTemplateCardMessage::toHorizontalContent)
                     .toList();
         }
-        Locale locale = ctx.getLocale();
-        List<HorizontalContent> contents = new ArrayList<>();
-        addHorizontalContent(contents, NoticeI18n.buildMessageProjectName(locale), ctx.getProjectName(), ctx.getProjectUrl());
-        addHorizontalContent(contents, NoticeI18n.buildMessageJobName(locale), ctx.getJobName(), ctx.getJobUrl());
-        addHorizontalContent(contents, NoticeI18n.buildMessageStatus(locale), resolveStatusLabel(ctx, locale), null);
-        addHorizontalContent(contents, NoticeI18n.buildMessageDuration(locale), ctx.getDuration(), null);
-        addHorizontalContent(contents, NoticeI18n.buildMessageExecutor(locale), ctx.getExecutorName(), null);
+        List<HorizontalContent> contents = BuildFields.of(ctx).stream()
+                .filter(field -> StringUtils.isNotBlank(field.value()))
+                .map(WechatWorkTemplateCardMessage::toHorizontalContent)
+                .toList();
         return contents.isEmpty() ? null : contents;
+    }
+
+    private static HorizontalContent toHorizontalContent(BuildField field) {
+        boolean hasUrl = StringUtils.isNotBlank(field.url());
+        return new HorizontalContent(hasUrl ? LINK_TYPE : TEXT_TYPE,
+                field.label(), field.value(), hasUrl ? field.url() : null);
     }
 
     private static HorizontalContent toHorizontalContent(CardField field) {
@@ -157,51 +161,14 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         return new HorizontalContent(type, field.getKeyname(), field.getValue(), url);
     }
 
-    private static void addHorizontalContent(List<HorizontalContent> contents, String key, String value, String url) {
-        if (StringUtils.isBlank(value)) {
-            return;
-        }
-        boolean hasUrl = StringUtils.isNotBlank(url);
-        contents.add(new HorizontalContent(hasUrl ? LINK_TYPE : TEXT_TYPE, key, value, hasUrl ? url : null));
-    }
-
     private static List<VerticalContent> resolveVerticalContentList(BuildContext ctx, MessageIntent intent,
                                                                     WeComPayload payload) {
         if (StringUtils.isNotBlank(payload.getAdditionalContent())) {
             return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), payload.getAdditionalContent()));
         }
-        // When the card already renders structured build-info rows, skip the vertical text block
-        // to avoid duplicating the same content in two places.
-        if (hasStructuredBuildFields(ctx)) {
-            return null;
-        }
-        String plainText = toPlainText(intent.getText());
-        if (StringUtils.isBlank(plainText)) {
-            return null;
-        }
-        return List.of(new VerticalContent(StringUtils.defaultString(intent.getTitle()), plainText));
-    }
-
-    private static boolean hasStructuredBuildFields(BuildContext ctx) {
-        return StringUtils.isNotBlank(ctx.getProjectName())
-                || StringUtils.isNotBlank(ctx.getJobName())
-                || StringUtils.isNotBlank(ctx.getDuration())
-                || StringUtils.isNotBlank(ctx.getExecutorName());
-    }
-
-    private static String toPlainText(String markdown) {
-        return StringUtils.defaultString(markdown)
-                .replaceAll("(?m)^>\\s*", "")
-                .replaceAll("\\*\\*([^*]+)\\*\\*", "$1")
-                .replaceAll("\\[([^\\]]+)]\\(([^)]+)\\)", "$1")
-                .replaceAll("<font\\s+color=['\"][^'\"]+['\"]>(.*?)</font>", "$1")
-                .replaceAll("(?m)^#{1,6}\\s*", "")
-                .trim();
-    }
-
-    private static String resolveStatusLabel(BuildContext ctx, Locale locale) {
-        BuildStatusEnum statusType = ctx.getStatusType();
-        return statusType == null ? "" : statusType.getLabel(locale);
+        // The structured rows already carry the build information, so there is no text block to
+        // add. Nothing else can reach here: a card is always built from a populated BuildContext.
+        return null;
     }
 
     private static int resolveSourceColor(BuildStatusEnum statusType) {
