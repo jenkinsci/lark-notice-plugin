@@ -66,6 +66,12 @@ public class MessageIntent {
     private List<Button> buttons;
 
     /**
+     * User-defined card information rows replacing the built-in build rows. WeCom renders these as
+     * structured rows, Lark and DingTalk as Markdown body lines.
+     */
+    private List<CardField> cardFields;
+
+    /**
      * Top image element shared by Lark cards and WeCom template cards.
      */
     private ImgElement topImg;
@@ -79,6 +85,23 @@ public class MessageIntent {
      * Click-through URL opened by link-style messages or card body clicks.
      */
     private String messageUrl;
+
+    /**
+     * Renders {@link #cardFields} as Markdown body lines, for platforms whose cards carry a
+     * Markdown body rather than a structured row list.
+     *
+     * @return joined lines, or {@code null} when no rows are set
+     */
+    public String renderCardFieldLines() {
+        if (cardFields == null || cardFields.isEmpty()) {
+            return null;
+        }
+        String rendered = cardFields.stream()
+                .filter(field -> StringUtils.isNotBlank(field.getValue()))
+                .map(CardField::toMarkdownLine)
+                .collect(Collectors.joining("\n"));
+        return StringUtils.isBlank(rendered) ? null : rendered;
+    }
 
     /**
      * Derives the card header theme color from {@link #statusType}.

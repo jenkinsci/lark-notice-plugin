@@ -7,10 +7,7 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
-import io.jenkins.plugins.lark.notice.model.BuildContext;
-import io.jenkins.plugins.lark.notice.model.ButtonModel;
-import io.jenkins.plugins.lark.notice.model.ImgModel;
-import io.jenkins.plugins.lark.notice.model.RunUser;
+import io.jenkins.plugins.lark.notice.model.*;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -51,6 +48,11 @@ public abstract class AbstractStep extends Step {
     protected MsgTypeEnum type;
 
     /**
+     * User-defined card information rows. When set they replace the built-in build rows.
+     */
+    protected List<CardFieldModel> cardFields;
+
+    /**
      * Whether a notification send failure should fail this pipeline step.
      * Defaults to {@code true} to preserve historical behavior; set to {@code false}
      * to keep the build green and only log a warning when sending fails.
@@ -70,6 +72,31 @@ public abstract class AbstractStep extends Step {
     @DataBoundSetter
     public void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
+    }
+
+    /**
+     * Sets the custom card information rows.
+     *
+     * @param cardFields list of card field models
+     */
+    @DataBoundSetter
+    public void setCardFields(List<CardFieldModel> cardFields) {
+        this.cardFields = cardFields;
+    }
+
+    /**
+     * Expands and converts the configured card rows into payload rows.
+     *
+     * @param envVars environment variables
+     * @return expanded rows, or {@code null} when none are configured
+     */
+    protected List<CardField> resolveCardFields(EnvVars envVars) {
+        if (CollectionUtils.isEmpty(cardFields)) {
+            return null;
+        }
+        return cardFields.stream()
+                .map(model -> model.toCardField(value -> expandNullable(envVars, value)))
+                .toList();
     }
 
     protected abstract SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener);

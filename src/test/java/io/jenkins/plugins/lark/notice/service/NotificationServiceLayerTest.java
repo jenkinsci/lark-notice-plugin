@@ -209,10 +209,10 @@ public class NotificationServiceLayerTest {
     private record TestNotifierProvider(List<LarkNotifierConfig> configs) implements LarkNotifierProvider {
 
         @Override
-            public List<LarkNotifierConfig> getLarkNotifierConfigs() {
-                return configs;
-            }
+        public List<LarkNotifierConfig> getLarkNotifierConfigs() {
+            return configs;
         }
+    }
 
     private static final class FailureResultBuilder extends Builder {
 

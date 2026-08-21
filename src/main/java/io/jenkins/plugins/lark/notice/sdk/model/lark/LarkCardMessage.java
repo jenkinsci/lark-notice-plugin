@@ -6,6 +6,7 @@ import io.jenkins.plugins.lark.notice.sdk.model.lark.builder.LarkCardBuilder;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Card;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 卡片消息 类型
@@ -31,7 +32,7 @@ public class LarkCardMessage extends BaseLarkMessage {
      * @return assembled interactive card message
      */
     public static LarkCardMessage build(MessageIntent intent, LarkPayload payload) {
-        String markdownContent = addAtInfo(intent.getText(), intent.getAt());
+        String markdownContent = addAtInfo(withCardFields(intent), intent.getAt());
         LarkCardBuilder builder = new LarkCardBuilder()
                 .withHeader(intent.obtainHeaderTemplate(), intent.getTitle())
                 .withImage(intent.getTopImg())
@@ -42,5 +43,18 @@ public class LarkCardMessage extends BaseLarkMessage {
             builder.withImage(payload.getBottomImg());
         }
         return new LarkCardMessage(builder.build());
+    }
+
+    /**
+     * Prepends the user-defined card rows to the body. Lark cards are Markdown based, so custom
+     * rows render as body lines rather than a structured list.
+     */
+    private static String withCardFields(MessageIntent intent) {
+        String fieldLines = intent.renderCardFieldLines();
+        if (fieldLines == null) {
+            return StringUtils.defaultString(intent.getText());
+        }
+        String text = StringUtils.defaultString(intent.getText());
+        return StringUtils.isBlank(text) ? fieldLines : fieldLines + "\n\n" + text;
     }
 }

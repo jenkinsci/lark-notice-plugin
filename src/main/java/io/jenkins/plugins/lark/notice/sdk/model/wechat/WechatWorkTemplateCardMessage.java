@@ -2,11 +2,7 @@ package io.jenkins.plugins.lark.notice.sdk.model.wechat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
-import io.jenkins.plugins.lark.notice.model.BuildContext;
-import io.jenkins.plugins.lark.notice.model.BuildField;
-import io.jenkins.plugins.lark.notice.model.BuildFields;
-import io.jenkins.plugins.lark.notice.model.MessageIntent;
-import io.jenkins.plugins.lark.notice.model.payload.CardField;
+import io.jenkins.plugins.lark.notice.model.*;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,9 +12,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * WeCom news-notice template card message.
@@ -74,7 +68,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         card.setSource(buildSource(ctx, payload));
         card.setMainTitle(new MainTitle(title, null));
         card.setCardImage(buildCardImage(intent));
-        card.setHorizontalContentList(resolveHorizontalContentList(ctx, payload));
+        card.setHorizontalContentList(resolveHorizontalContentList(ctx, intent));
         card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload));
         card.setJumpList(resolveJumpList(intent));
         card.setCardAction(new CardAction(LINK_TYPE, actionUrl));
@@ -134,9 +128,9 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
      * Custom rows are capped at {@link #MAX_HORIZONTAL_CONTENT_ITEMS} because WeCom rejects
      * longer lists; the default rows never exceed that cap.
      */
-    private static List<HorizontalContent> resolveHorizontalContentList(BuildContext ctx, WeComPayload payload) {
-        if (CollectionUtils.isNotEmpty(payload.getCardFields())) {
-            return payload.getCardFields().stream()
+    private static List<HorizontalContent> resolveHorizontalContentList(BuildContext ctx, MessageIntent intent) {
+        if (CollectionUtils.isNotEmpty(intent.getCardFields())) {
+            return intent.getCardFields().stream()
                     .filter(field -> StringUtils.isNotBlank(field.getValue()))
                     .limit(MAX_HORIZONTAL_CONTENT_ITEMS)
                     .map(WechatWorkTemplateCardMessage::toHorizontalContent)

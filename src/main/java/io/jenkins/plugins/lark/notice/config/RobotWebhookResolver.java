@@ -193,28 +193,28 @@ public final class RobotWebhookResolver {
     private record ParsedWebhook(String scheme, String authority, String path, boolean larkCompatible) {
 
         private static ParsedWebhook parse(String webhook) {
-                if (StringUtils.isBlank(webhook)) {
+            if (StringUtils.isBlank(webhook)) {
+                return null;
+            }
+            try {
+                URI uri = new URI(webhook.trim());
+                String scheme = StringUtils.defaultString(uri.getScheme());
+                String authority = StringUtils.defaultString(uri.getRawAuthority());
+                String path = StringUtils.defaultString(uri.getPath());
+                if (StringUtils.isAnyBlank(scheme, authority, path)) {
                     return null;
                 }
-                try {
-                    URI uri = new URI(webhook.trim());
-                    String scheme = StringUtils.defaultString(uri.getScheme());
-                    String authority = StringUtils.defaultString(uri.getRawAuthority());
-                    String path = StringUtils.defaultString(uri.getPath());
-                    if (StringUtils.isAnyBlank(scheme, authority, path)) {
-                        return null;
-                    }
-                    return new ParsedWebhook(
-                            scheme,
-                            authority,
-                            path,
-                            path.startsWith(LARK_WEBHOOK_PREFIX)
-                    );
-                } catch (URISyntaxException ex) {
-                    return null;
-                }
+                return new ParsedWebhook(
+                        scheme,
+                        authority,
+                        path,
+                        path.startsWith(LARK_WEBHOOK_PREFIX)
+                );
+            } catch (URISyntaxException ex) {
+                return null;
             }
         }
+    }
 
     /**
      * Bundle of resolved webhook settings.

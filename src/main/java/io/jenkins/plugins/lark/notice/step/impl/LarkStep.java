@@ -14,7 +14,6 @@ import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
-import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement;
 import io.jenkins.plugins.lark.notice.step.AbstractStep;
 import io.jenkins.plugins.lark.notice.tools.Utils;
 import lombok.Getter;
@@ -22,13 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
 
@@ -230,6 +223,7 @@ public class LarkStep extends AbstractStep {
                 .text(envVars.expand(Utils.join(text))).buttons(resolvedButtons)
                 .topImg(buildImg(envVars, topImg))
                 .atAll(atAll).atUserIds(expandAts(envVars, ats))
+                .cardFields(resolveCardFields(envVars))
                 .build();
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         LarkPayload payload = LarkPayload.builder()

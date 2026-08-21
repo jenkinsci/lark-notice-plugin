@@ -5,15 +5,12 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
-import io.jenkins.plugins.lark.notice.model.CardFieldModel;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
-import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
@@ -23,13 +20,11 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.springframework.util.CollectionUtils;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
 
@@ -77,12 +72,6 @@ public class WechatWorkStep extends AbstractStep {
      * label when blank.
      */
     private String sourceDesc;
-
-    /**
-     * Custom content rows for WeCom template cards.
-     * When set, these override the default build-info rows rendered from the build context.
-     */
-    private List<CardFieldModel> cardFields;
 
     /**
      * Users to mention in text and markdown messages.
@@ -176,16 +165,6 @@ public class WechatWorkStep extends AbstractStep {
     }
 
     /**
-     * Sets the custom card content rows.
-     *
-     * @param cardFields list of card field models
-     */
-    @DataBoundSetter
-    public void setCardFields(List<CardFieldModel> cardFields) {
-        this.cardFields = cardFields;
-    }
-
-    /**
      * Sets the list of users to @mention.
      *
      * @param ats user identifiers to mention
@@ -250,22 +229,13 @@ public class WechatWorkStep extends AbstractStep {
                 .buttons(resolvedButtons)
                 .atAll(atAll)
                 .atUserIds(expandAts(envVars, ats))
+                .cardFields(resolveCardFields(envVars))
                 .build();
         WeComPayload payload = WeComPayload.builder()
                 .additionalContent(expandedText)
                 .sourceDesc(expandNullable(envVars, sourceDesc))
-                .cardFields(resolveCardFields(envVars))
                 .build();
         return new MessageBundle(ctx, intent, payload);
-    }
-
-    private List<CardField> resolveCardFields(EnvVars envVars) {
-        if (CollectionUtils.isEmpty(cardFields)) {
-            return null;
-        }
-        return cardFields.stream()
-                .map(model -> model.toCardField(value -> expandNullable(envVars, value)))
-                .toList();
     }
 
     /**

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * End-to-end tests for the {@code lark} step covering the message types whose payload used to be
@@ -101,6 +102,20 @@ public class LarkStepPipelineTest {
         JsonNode content = body.path("content").path("post").path("zh_cn").path("content");
         assertEquals("build 1", content.get(0).get(0).path("text").asText());
         assertEquals("https://example.com/1", content.get(0).get(1).path("href").asText());
+    }
+
+    @Test
+    public void cardFieldsShouldRenderAsMarkdownBodyLines() throws Exception {
+        JsonNode body = runAndCapture("robot: 'robot-lark', type: 'CARD', title: 'T', text: ['tail'], "
+                + "cardFields: [[keyname: '\u7248\u672c', value: '1.2.0'], "
+                + "[keyname: '\u53d1\u5e03\u5355', value: '\u8be6\u60c5', url: 'https://example.com/r/${BUILD_NUMBER}']]");
+
+        assertEquals("interactive", body.path("msg_type").asText());
+        String rendered = requestBody.get();
+        assertTrue(rendered.contains("**\u7248\u672c**: 1.2.0"));
+        assertTrue(rendered.contains("[\u8be6\u60c5](https://example.com/r/1)"));
+        // Free text stays, after the rows.
+        assertTrue(rendered.contains("tail"));
     }
 
     @Test

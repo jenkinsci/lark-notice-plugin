@@ -97,9 +97,9 @@ public final class ConfigSnapshotImportService {
     }
 
     /**
-         * Parsed import request bundle used by preview and apply flows.
-         */
-        private record ParsedImportRequest(LarkConfigImportMode mode,
-                                           LarkConfigSnapshotMapper.ImportedGlobalConfig imported) {
+     * Parsed import request bundle used by preview and apply flows.
+     */
+    private record ParsedImportRequest(LarkConfigImportMode mode,
+                                       LarkConfigSnapshotMapper.ImportedGlobalConfig imported) {
     }
 }

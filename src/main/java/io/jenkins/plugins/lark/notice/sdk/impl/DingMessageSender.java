@@ -16,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.LF;
+
 /**
  * DingTalk implementation for sending group robot messages.
  *
@@ -25,6 +27,19 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
 
     public DingMessageSender(RobotConfigModel robotConfig) {
         super(robotConfig);
+    }
+
+    /**
+     * Prepends the user-defined card rows to the body. DingTalk action cards carry a Markdown body,
+     * so custom rows render as body lines rather than a structured list.
+     */
+    private static String withCardFields(MessageIntent intent) {
+        String fieldLines = intent.renderCardFieldLines();
+        String text = StringUtils.defaultString(intent.getText());
+        if (fieldLines == null) {
+            return text;
+        }
+        return StringUtils.isBlank(text) ? fieldLines : fieldLines + LF + LF + text;
     }
 
     @Override
@@ -69,7 +84,7 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
     @Override
     public SendResult sendCard(BuildContext ctx, MessageIntent intent, DingPayload payload) {
         DingCardMessage message;
-        String text = addKeyWord(intent.getText(), robotConfig.getKeys());
+        String text = addKeyWord(withCardFields(intent), robotConfig.getKeys());
         String singleTitle = payload == null ? null : payload.getSingleTitle();
         if (StringUtils.isNotBlank(singleTitle)) {
             message = DingCardMessage.build(intent.getAt(), intent.getTitle(), text, singleTitle, payload.getSingleUrl());

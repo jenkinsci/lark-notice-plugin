@@ -5,11 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
-import io.jenkins.plugins.lark.notice.model.BuildContext;
-import io.jenkins.plugins.lark.notice.model.BuildJobModel;
-import io.jenkins.plugins.lark.notice.model.MessageIntent;
-import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
-import io.jenkins.plugins.lark.notice.model.payload.CardField;
+import io.jenkins.plugins.lark.notice.model.*;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
@@ -210,11 +206,12 @@ public class WechatWorkMessageSenderTest {
                 .statusType(BuildStatusEnum.SUCCESS)
                 .locale(Locale.US)
                 .build();
-        WeComPayload payload = WeComPayload.builder()
+        intent = intent.toBuilder()
                 .cardFields(List.of(
                         CardField.builder().keyname("版本").value("1.2.0").build(),
                         CardField.builder().keyname("发布单").value("详情").url("https://example.com/release/1").build()))
                 .build();
+        WeComPayload payload = WeComPayload.builder().build();
 
         SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
 
@@ -245,7 +242,7 @@ public class WechatWorkMessageSenderTest {
                 .locale(Locale.US)
                 .build();
         // Blank-valued rows are dropped before the cap, so 9 inputs must yield the first 6 non-blank rows.
-        WeComPayload payload = WeComPayload.builder()
+        intent = intent.toBuilder()
                 .cardFields(List.of(
                         CardField.builder().keyname("k1").value("v1").build(),
                         CardField.builder().keyname("blank").value("  ").build(),
@@ -257,6 +254,7 @@ public class WechatWorkMessageSenderTest {
                         CardField.builder().keyname("k7").value("v7").build(),
                         CardField.builder().keyname("k8").value("v8").build()))
                 .build();
+        WeComPayload payload = WeComPayload.builder().build();
 
         SendResult result = MessageDispatcher.getInstance().send(null, null, ctx, intent, payload, sender);
 

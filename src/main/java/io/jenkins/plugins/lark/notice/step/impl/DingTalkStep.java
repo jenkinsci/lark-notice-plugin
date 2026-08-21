@@ -226,6 +226,7 @@ public class DingTalkStep extends AbstractStep {
                 .messageUrl(expandNullable(envVars, messageUrl))
                 .picUrl(expandNullable(envVars, picUrl))
                 .atAll(atAll).atUserIds(expandAts(envVars, ats))
+                .cardFields(resolveCardFields(envVars))
                 .build();
         DingPayload payload = DingPayload.builder()
                 .singleTitle(expandNullable(envVars, singleTitle))

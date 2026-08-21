@@ -24,9 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * End-to-end baseline tests for the {@code dingTalk} pipeline step: script arguments through the
@@ -141,6 +139,19 @@ public class DingTalkStepTest {
         assertEquals("https://example.com/b", card.path("singleURL").asText());
         assertTrue(card.path("singleUrl").isMissingNode());
         assertTrue(card.path("btns").isMissingNode() || card.path("btns").isNull());
+    }
+
+    @Test
+    public void cardFieldsShouldRenderAsMarkdownBodyLines() throws Exception {
+        JsonNode card = runAndCapture("robot: 'robot-ding', type: 'CARD', title: 'T', text: ['tail'], "
+                + "cardFields: [[keyname: '\u7248\u672c', value: '1.2.0'], "
+                + "[keyname: '\u53d1\u5e03\u5355', value: '\u8be6\u60c5', url: 'https://example.com/r/${BUILD_NUMBER}']]")
+                .path("actionCard");
+
+        String text = card.path("text").asText();
+        assertTrue(text.contains("**\u7248\u672c**: 1.2.0"));
+        assertTrue(text.contains("[\u8be6\u60c5](https://example.com/r/1)"));
+        assertTrue(text.contains("tail"));
     }
 
     @Test

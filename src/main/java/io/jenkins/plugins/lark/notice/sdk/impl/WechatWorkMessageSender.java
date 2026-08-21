@@ -26,16 +26,16 @@ public class WechatWorkMessageSender extends AbstractMessageSender<WeComPayload>
         super(robotConfig);
     }
 
-    @Override
-    public Class<WeComPayload> payloadType() {
-        return WeComPayload.class;
-    }
-
     private static String withTitle(String title, String text) {
         if (StringUtils.isBlank(title)) {
             return text;
         }
         return "## " + title + LF + LF + StringUtils.defaultString(text);
+    }
+
+    @Override
+    public Class<WeComPayload> payloadType() {
+        return WeComPayload.class;
     }
 
     @Override

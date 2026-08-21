@@ -3,7 +3,6 @@ package io.jenkins.plugins.lark.notice.model;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -21,13 +20,19 @@ import java.util.function.UnaryOperator;
 @EqualsAndHashCode(callSuper = false)
 public class CardFieldModel implements Describable<CardFieldModel> {
 
-    /** Row label, e.g. "任务名称". */
+    /**
+     * Row label, e.g. "任务名称".
+     */
     private String keyname;
 
-    /** Row value. */
+    /**
+     * Row value.
+     */
     private String value;
 
-    /** Jump URL. When blank the row is rendered as a plain text row. */
+    /**
+     * Jump URL. When blank the row is rendered as a plain text row.
+     */
     private String url;
 
     @DataBoundConstructor

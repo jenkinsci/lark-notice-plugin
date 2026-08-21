@@ -11,8 +11,8 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
 import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
+import io.jenkins.plugins.lark.notice.model.CardField;
 import io.jenkins.plugins.lark.notice.model.CardFieldModel;
-import io.jenkins.plugins.lark.notice.model.payload.CardField;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +28,11 @@ public class WechatWorkStepTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
+        assertEquals(expectedText, button.getText());
+        assertTrue(button.getUrl().endsWith(expectedUrlSuffix));
+    }
 
     @Test
     public void customCardFieldsShouldOverrideDefaultBuildRows() throws Exception {
@@ -55,7 +60,7 @@ public class WechatWorkStepTest {
             WechatWorkStep.MessageBundle bundle = step.buildMessage(
                     build, envVars, TaskListener.NULL, "robot-wecom");
 
-            List<CardField> fields = bundle.payload().getCardFields();
+            List<CardField> fields = bundle.intent().getCardFields();
             assertNotNull(fields);
             assertEquals(2, fields.size());
             assertEquals("版本", fields.get(0).getKeyname());
@@ -65,11 +70,6 @@ public class WechatWorkStepTest {
         } finally {
             Locale.setDefault(previous);
         }
-    }
-
-    private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
-        assertEquals(expectedText, button.getText());
-        assertTrue(button.getUrl().endsWith(expectedUrlSuffix));
     }
 
     @Test

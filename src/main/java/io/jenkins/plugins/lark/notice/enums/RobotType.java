@@ -132,21 +132,21 @@ public enum RobotType {
     private record ParsedWebhook(boolean httpScheme, String path) {
 
         private static ParsedWebhook parse(String url) {
-                if (StringUtils.isBlank(url)) {
+            if (StringUtils.isBlank(url)) {
+                return null;
+            }
+            try {
+                URI uri = new URI(url.trim());
+                String scheme = StringUtils.defaultString(uri.getScheme());
+                String path = StringUtils.defaultString(uri.getPath());
+                if (StringUtils.isBlank(uri.getHost()) || StringUtils.isBlank(path)) {
                     return null;
                 }
-                try {
-                    URI uri = new URI(url.trim());
-                    String scheme = StringUtils.defaultString(uri.getScheme());
-                    String path = StringUtils.defaultString(uri.getPath());
-                    if (StringUtils.isBlank(uri.getHost()) || StringUtils.isBlank(path)) {
-                        return null;
-                    }
-                    boolean httpScheme = "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
-                    return new ParsedWebhook(httpScheme, path);
-                } catch (URISyntaxException ex) {
-                    return null;
-                }
+                boolean httpScheme = "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+                return new ParsedWebhook(httpScheme, path);
+            } catch (URISyntaxException ex) {
+                return null;
             }
         }
+    }
 }
