@@ -48,23 +48,45 @@
     </scm>
 
     <dependencies>
+        <!-- Jackson binding used to build and parse the webhook payloads. -->
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
         </dependency>
+        <!-- Pipeline step API plus the StepListener hook the notifier registers. -->
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-api</artifactId>
         </dependency>
+        <!-- BranchJobProperty, so multibranch jobs can carry their own robot config. -->
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-multibranch</artifactId>
         </dependency>
+        <!-- Annotation processor only; never bundled into the hpi. -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- Declarative pipeline {} syntax, for hpi:run and JenkinsRule tests only. -->
+        <dependency>
+            <groupId>org.jenkinsci.plugins</groupId>
+            <artifactId>pipeline-model-definition</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Generic steps such as echo and withEnv, for hpi:run and JenkinsRule tests only. -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-basic-steps</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Agent-bound steps node, sh and bat, for hpi:run and JenkinsRule tests only. -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-durable-task-step</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
