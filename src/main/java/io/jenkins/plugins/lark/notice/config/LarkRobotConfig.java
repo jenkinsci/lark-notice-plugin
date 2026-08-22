@@ -164,7 +164,7 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     /**
      * Updates the endpoint input mode used by the UI.
      *
-     * @param endpointMode endpoint mode
+     * @param endpointMode whether the webhook is stored whole or assembled from base URL and token
      */
     @DataBoundSetter
     public void setEndpointMode(WebhookEndpointMode endpointMode) {
@@ -183,7 +183,7 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     /**
      * Updates the transient base URL used by the token input mode.
      *
-     * @param baseUrl base URL
+     * @param baseUrl webhook base URL, used only in assembled mode
      */
     @DataBoundSetter
     public void setBaseUrl(String baseUrl) {
@@ -202,7 +202,7 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
     /**
      * Updates the transient webhook token used by the token input mode.
      *
-     * @param webhookToken webhook token
+     * @param webhookToken webhook credential, used only in assembled mode
      */
     @DataBoundSetter
     public void setWebhookToken(String webhookToken) {

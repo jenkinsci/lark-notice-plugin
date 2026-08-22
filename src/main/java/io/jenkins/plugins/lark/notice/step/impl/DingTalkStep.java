@@ -110,121 +110,65 @@ public class DingTalkStep extends AbstractStep {
         super(robot, type);
     }
 
-    /**
-     * Sets the message title.
-     *
-     * @param title message title
-     */
     @DataBoundSetter
     public void setTitle(String title) {
         this.title = title;
     }
 
-    /**
-     * Sets the message text lines.
-     *
-     * @param text message text lines
-     */
     @DataBoundSetter
     public void setText(List<String> text) {
         this.text = text;
     }
 
     /**
-     * Sets the list of users to @mention.
-     *
-     * @param ats user identifiers to mention
+     * Accepts the raw list from the pipeline script; duplicates collapse and {@code null} becomes an
+     * empty set, so callers never have to guard.
      */
     @DataBoundSetter
     public void setAts(List<String> ats) {
         this.ats = ats == null ? new HashSet<>() : new HashSet<>(ats);
     }
 
-    /**
-     * Sets whether to @mention all users.
-     *
-     * @param atAll true to mention all users
-     */
     @DataBoundSetter
     public void setAtAll(boolean atAll) {
         this.atAll = atAll;
     }
 
-    /**
-     * Sets the URL for link-style messages.
-     *
-     * @param messageUrl message URL
-     */
     @DataBoundSetter
     public void setMessageUrl(String messageUrl) {
         this.messageUrl = messageUrl;
     }
 
-    /**
-     * Sets the picture URL for link-style messages.
-     *
-     * @param picUrl picture URL
-     */
     @DataBoundSetter
     public void setPicUrl(String picUrl) {
         this.picUrl = picUrl;
     }
 
-    /**
-     * Sets the single action button title for DingTalk action cards.
-     *
-     * @param singleTitle single button title
-     */
     @DataBoundSetter
     public void setSingleTitle(String singleTitle) {
         this.singleTitle = singleTitle;
     }
 
-    /**
-     * Sets the single action button URL for DingTalk action cards.
-     *
-     * @param singleUrl single button URL
-     */
     @DataBoundSetter
     public void setSingleUrl(String singleUrl) {
         this.singleUrl = singleUrl;
     }
 
-    /**
-     * Sets whether action-card buttons should be arranged vertically.
-     *
-     * @param verticalButton true for vertical layout
-     */
     @DataBoundSetter
     public void setVerticalButton(boolean verticalButton) {
         this.verticalButton = verticalButton;
     }
 
-    /**
-     * Sets the action buttons for card messages.
-     *
-     * @param buttons list of button models
-     */
     @DataBoundSetter
     public void setButtons(List<ButtonModel> buttons) {
         this.buttons = buttons;
     }
 
-    /**
-     * Sets whether the sender avatar is hidden on action cards.
-     *
-     * @param hideAvatar true to hide the avatar
-     */
     @DataBoundSetter
     public void setHideAvatar(boolean hideAvatar) {
         this.hideAvatar = hideAvatar;
     }
 
-    /**
-     * Sets the entries of a FEED_CARD message.
-     *
-     * @param feedCardLinks feed entries
-     */
     @DataBoundSetter
     public void setFeedCardLinks(List<FeedCardLinkModel> feedCardLinks) {
         this.feedCardLinks = feedCardLinks;

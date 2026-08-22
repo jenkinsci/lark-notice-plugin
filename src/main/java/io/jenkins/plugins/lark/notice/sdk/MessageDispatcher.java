@@ -210,7 +210,7 @@ public class MessageDispatcher {
     /**
      * Builds a dispatch target from the saved global configuration for a robot id.
      *
-     * @param robotId robot id
+     * @param robotId id of a robot in the saved global configuration
      * @return resolved target; its sender is {@code null} when no such robot exists
      */
     DispatchTarget resolveTarget(String robotId) {

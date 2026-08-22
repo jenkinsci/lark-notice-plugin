@@ -152,7 +152,7 @@ public final class NotificationDispatchExecutor {
      * @param config    notifier config
      * @param model     build model
      * @param envVars   environment variables
-     * @param robotType robot type
+     * @param robotType platform of the target robot, deciding the Markdown dialect
      * @return final message text
      */
     static String resolveMessageText(LarkNotifierConfig config, BuildJobModel model, EnvVars envVars,

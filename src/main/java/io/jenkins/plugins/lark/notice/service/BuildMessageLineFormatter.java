@@ -92,14 +92,14 @@ public final class BuildMessageLineFormatter {
     /**
      * Message values used to format the shared body lines.
      *
-     * @param projectName  project name
-     * @param projectUrl   project URL
-     * @param jobName      job name
-     * @param jobUrl       job URL
-     * @param statusLabel  status label
+     * @param projectName  Jenkins project display name
+     * @param projectUrl   absolute project URL
+     * @param jobName      build run display name
+     * @param jobUrl       absolute run URL
+     * @param statusLabel  build status, already localised
      * @param statusColor  status color used in the tag
      * @param duration     build duration
-     * @param executorName executor name
+     * @param executorName who or what triggered the build
      * @param content      optional content line
      */
     public record BuildMessageLineValues(String projectName,

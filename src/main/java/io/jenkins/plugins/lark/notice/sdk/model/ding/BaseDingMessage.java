@@ -26,8 +26,8 @@ public abstract class BaseDingMessage implements Serializable {
      * 添加 at 信息
      *
      * @param content  原始内容
-     * @param at       at 配置
-     * @param markdown 是否是 markdown 格式的内容
+     * @param at       被 @ 的成员信息，为 null 时原样返回
+     * @param markdown 正文是否为 Markdown；Markdown 下 @ 标记另起一行追加
      * @return 包含 at 信息的内容
      */
     protected static String addAtInfo(String content, At at, boolean markdown) {

@@ -37,6 +37,26 @@ public final class RobotConfigTestService {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
+    /**
+     * Sends a test message using values taken straight from the robot configuration form, without
+     * consulting — or requiring — the saved configuration. This is what lets the test button work
+     * while a robot is still being created.
+     *
+     * @param id                    robot id, used for logging only
+     * @param name                  robot display name, used for logging only
+     * @param protocolType          {@link io.jenkins.plugins.lark.notice.enums.RobotProtocolType}
+     *                              name, or blank to infer it from the webhook
+     * @param endpointMode          {@link io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode}
+     *                              name, deciding whether the webhook is given whole or assembled
+     * @param webhook               full webhook URL, used in full-webhook mode
+     * @param baseUrl               webhook base URL, used when the webhook is assembled
+     * @param webhookToken          webhook credential, used when the webhook is assembled
+     * @param proxy                 serialised {@link io.jenkins.plugins.lark.notice.config.LarkProxyConfig}
+     * @param securityConfigs       serialised list of security policies (keyword, signature, no-SSL)
+     * @param messageLocaleStrategy {@link io.jenkins.plugins.lark.notice.enums.MessageLocaleStrategy}
+     *                              name, deciding the language of the test message
+     * @return outcome carrying a localised message for the form to display
+     */
     public static ApiResponse testRobotConfig(String id, String name,
                                               String protocolType, String endpointMode,
                                               String webhook, String baseUrl, String webhookToken,

@@ -109,121 +109,65 @@ public class WechatWorkStep extends AbstractStep {
         super(robot, type);
     }
 
-    /**
-     * Sets the message title.
-     *
-     * @param title message title
-     */
     @DataBoundSetter
     public void setTitle(String title) {
         this.title = title;
     }
 
-    /**
-     * Sets the message text lines.
-     *
-     * @param text message text lines
-     */
     @DataBoundSetter
     public void setText(List<String> text) {
         this.text = text;
     }
 
-    /**
-     * Sets the target URL for link-style messages and card body clicks.
-     *
-     * @param messageUrl target URL
-     */
     @DataBoundSetter
     public void setMessageUrl(String messageUrl) {
         this.messageUrl = messageUrl;
     }
 
-    /**
-     * Sets the image URL used by WeCom template cards.
-     *
-     * @param picUrl image URL
-     */
     @DataBoundSetter
     public void setPicUrl(String picUrl) {
         this.picUrl = picUrl;
     }
 
-    /**
-     * Sets the top image for card messages.
-     *
-     * @param topImg top image model
-     */
     @DataBoundSetter
     public void setTopImg(ImgModel topImg) {
         this.topImg = topImg;
     }
 
-    /**
-     * Sets the action buttons for card messages.
-     *
-     * @param buttons list of button models
-     */
     @DataBoundSetter
     public void setButtons(List<ButtonModel> buttons) {
         this.buttons = buttons;
     }
 
-    /**
-     * Sets the card header source description.
-     *
-     * @param sourceDesc source line text
-     */
     @DataBoundSetter
     public void setSourceDesc(String sourceDesc) {
         this.sourceDesc = sourceDesc;
     }
 
-    /**
-     * Sets the card quote block title.
-     *
-     * @param quoteTitle quote title
-     */
     @DataBoundSetter
     public void setQuoteTitle(String quoteTitle) {
         this.quoteTitle = quoteTitle;
     }
 
-    /**
-     * Sets the card quote block body.
-     *
-     * @param quoteText quote body
-     */
     @DataBoundSetter
     public void setQuoteText(String quoteText) {
         this.quoteText = quoteText;
     }
 
-    /**
-     * Sets the card quote block jump target.
-     *
-     * @param quoteUrl quote URL
-     */
     @DataBoundSetter
     public void setQuoteUrl(String quoteUrl) {
         this.quoteUrl = quoteUrl;
     }
 
     /**
-     * Sets the list of users to @mention.
-     *
-     * @param ats user identifiers to mention
+     * Accepts the raw list from the pipeline script; duplicates collapse and {@code null} becomes an
+     * empty set, so callers never have to guard.
      */
     @DataBoundSetter
     public void setAts(List<String> ats) {
         this.ats = ats == null ? new HashSet<>() : new HashSet<>(ats);
     }
 
-    /**
-     * Sets whether to @mention all users.
-     *
-     * @param atAll true to mention all users
-     */
     @DataBoundSetter
     public void setAtAll(boolean atAll) {
         this.atAll = atAll;

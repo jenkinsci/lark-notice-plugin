@@ -46,7 +46,7 @@ public class MessageSenderRegistry {
     /**
      * Looks up the configured robot display name for logging and diagnostics.
      *
-     * @param robotId robot id
+     * @param robotId id of a robot in the saved global configuration
      * @return optional robot display name
      */
     public Optional<String> findRobotName(String robotId) {
@@ -72,7 +72,7 @@ public class MessageSenderRegistry {
     /**
      * Creates one sender from current global robot and proxy configuration.
      *
-     * @param robotId robot id
+     * @param robotId id of a robot in the saved global configuration
      * @return sender instance, or {@code null} when no matching robot exists
      */
     private MessageSender<? extends PlatformPayload> createSender(String robotId) {

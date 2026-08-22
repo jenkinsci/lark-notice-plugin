@@ -59,21 +59,11 @@ public abstract class AbstractStep extends Step {
         this.type = type;
     }
 
-    /**
-     * Sets whether a send failure should fail this pipeline step.
-     *
-     * @param failOnError {@code true} to fail the step on send failure
-     */
     @DataBoundSetter
     public void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
     }
 
-    /**
-     * Sets the custom card information rows.
-     *
-     * @param cardFields list of card field models
-     */
     @DataBoundSetter
     public void setCardFields(List<CardFieldModel> cardFields) {
         this.cardFields = cardFields;
@@ -115,6 +105,14 @@ public abstract class AbstractStep extends Step {
         return Jenkins.get().getRootUrl() + run.getUrl();
     }
 
+    /**
+     * Assembles and sends this step's message.
+     *
+     * @param run      build the step is running in
+     * @param envVars  environment of that build, already merged with any Pipeline context
+     * @param listener task listener the send is logged to
+     * @return send outcome; implementations report failures here rather than throwing
+     */
     protected abstract SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener);
 
     @Override
@@ -122,10 +120,25 @@ public abstract class AbstractStep extends Step {
         return new GenericStepExecution<>(this, context);
     }
 
+    /**
+     * Expands environment variables, passing {@code null} through untouched so an unset optional
+     * parameter stays unset instead of becoming an empty string.
+     *
+     * @param envVars environment variables
+     * @param value   raw value from the step arguments, may be {@code null}
+     * @return expanded value, or {@code null}
+     */
     protected String expandNullable(EnvVars envVars, String value) {
         return value == null ? null : envVars.expand(value);
     }
 
+    /**
+     * Converts a configured image into the Lark card element, expanding the text-bearing fields.
+     *
+     * @param envVars  environment variables
+     * @param imgModel configured image, may be {@code null}
+     * @return image element, or {@code null} when no image is configured
+     */
     protected ImgElement buildImg(EnvVars envVars, ImgModel imgModel) {
         if (imgModel == null) {
             return null;
@@ -142,6 +155,14 @@ public abstract class AbstractStep extends Step {
         return imgElement;
     }
 
+    /**
+     * Converts configured buttons into wire-level buttons, expanding titles and URLs.
+     *
+     * @param envVars environment variables
+     * @param buttons configured buttons, may be empty
+     * @return expanded buttons, or {@code null} when none are configured, which is what lets callers
+     * distinguish "no buttons given" from "an empty list was given" and substitute defaults
+     */
     protected List<Button> expandButtons(EnvVars envVars, List<ButtonModel> buttons) {
         if (CollectionUtils.isEmpty(buttons)) {
             return null;
@@ -186,7 +207,7 @@ public abstract class AbstractStep extends Step {
      * @param run      build run
      * @param listener task listener
      * @param status   build status
-     * @param locale   locale
+     * @param locale   locale used to render built-in labels
      * @return build context
      */
     protected BuildContext buildContext(Run<?, ?> run, TaskListener listener, BuildStatusEnum status, Locale locale) {

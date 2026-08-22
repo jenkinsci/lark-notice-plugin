@@ -94,7 +94,7 @@ public class RobotConfigModel {
     /**
      * Creates a signature using the given timestamp and secret.
      *
-     * @param timestamp timestamp
+     * @param timestamp signing timestamp; DingTalk expects milliseconds, Lark seconds
      * @return signature string
      */
     public String createSign(long timestamp) {

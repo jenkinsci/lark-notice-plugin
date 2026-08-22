@@ -57,6 +57,13 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
         return DingPayload.class;
     }
 
+    /**
+     * Builds the signing credentials for a signed robot. These are returned as header pairs but
+     * {@code AbstractMessageSender} appends them to the webhook URL instead, because that is where
+     * DingTalk expects {@code timestamp} and {@code sign}.
+     *
+     * @return {@code timestamp} and {@code sign} pairs, or an empty array when signing is off
+     */
     protected String[] signHeaders() {
         String[] headers = new String[]{};
         if (StringUtils.isNotBlank(robotConfig.getSign())) {

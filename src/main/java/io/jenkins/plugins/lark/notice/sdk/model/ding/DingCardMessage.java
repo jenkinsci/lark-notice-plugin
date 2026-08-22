@@ -28,6 +28,17 @@ public class DingCardMessage extends BaseDingMessage {
         setMsgType("actionCard");
     }
 
+    /**
+     * Builds an action card showing a list of buttons.
+     *
+     * @param at             mention settings
+     * @param title          title shown in the conversation list
+     * @param text           card body, Markdown
+     * @param btnOrientation {@code 0} vertical, {@code 1} horizontal; defaults to horizontal
+     * @param buttons        buttons to render
+     * @param hideAvatar     {@code 1} to hide the sender avatar
+     * @return action card message
+     */
     public static DingCardMessage build(At at, String title, String text, String btnOrientation,
                                         List<Button> buttons, String hideAvatar) {
         ActionCardContent content = new ActionCardContent(title, addAtInfo(text, at, true),
@@ -35,6 +46,18 @@ public class DingCardMessage extends BaseDingMessage {
         return new DingCardMessage(at, content);
     }
 
+    /**
+     * Builds an action card whose whole body is one jump target. DingTalk ignores {@code btns} once
+     * {@code singleTitle} and {@code singleURL} are set, so this variant carries no button list.
+     *
+     * @param at          mention settings
+     * @param title       title shown in the conversation list
+     * @param text        card body, Markdown
+     * @param singleTitle label of the single action
+     * @param singleUrl   target of the single action
+     * @param hideAvatar  {@code 1} to hide the sender avatar
+     * @return action card message
+     */
     public static DingCardMessage build(At at, String title, String text, String singleTitle,
                                         String singleUrl, String hideAvatar) {
         ActionCardContent content = new ActionCardContent(title,
