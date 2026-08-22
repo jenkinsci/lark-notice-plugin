@@ -8,6 +8,7 @@ import io.jenkins.plugins.lark.notice.Messages;
 import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkNotifierConfig;
 import io.jenkins.plugins.lark.notice.config.MessageLocaleResolver;
+import io.jenkins.plugins.lark.notice.context.NoticeEnvVars;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
@@ -68,8 +69,9 @@ public final class NotificationDispatchExecutor {
 
         BuildJobModel model = context.model();
         Locale locale = MessageLocaleResolver.resolve(config);
-        applyModelTemplateValues(config, model, context.envVars(), locale);
-        String messageText = resolveMessageText(config, model, context.envVars(), robotType, locale);
+        EnvVars envVars = localizedEnvVars(context.envVars(), model, locale);
+        applyModelTemplateValues(config, model, envVars, locale);
+        String messageText = resolveMessageText(config, model, envVars, robotType, locale);
         RobotProtocolType protocol = RobotProtocolType.fromRobotType(robotType);
         MessageIntent intent = model.buildCardIntent(locale).toBuilder()
                 .atAll(config.isAtAll()).atUserIds(atUserIds).text(messageText).build();
@@ -79,6 +81,25 @@ public final class NotificationDispatchExecutor {
         SendResult result = messageDispatcher.send(listener, config.getRobotId(), buildCtx, intent, payload);
         boolean failBuild = LarkGlobalConfig.getInstance().isFailBuildOnNotificationFailure();
         handleSendResult(source, run, listener, occasion, config.getRobotId(), result, failBuild);
+    }
+
+    /**
+     * Overlays the locale-sensitive build variables for one notifier configuration.
+     *
+     * <p>Environment variables are resolved once per build, but the message locale is configured
+     * per robot, so {@code ${JOB_STATUS}} cannot have a single correct value when two robots on the
+     * same job use different locales. Each configuration therefore expands its templates against
+     * its own copy.
+     *
+     * @param base   variables resolved for the build
+     * @param model  build model carrying the outcome
+     * @param locale locale configured for the target robot
+     * @return a copy carrying this robot's status label
+     */
+    static EnvVars localizedEnvVars(EnvVars base, BuildJobModel model, Locale locale) {
+        EnvVars envVars = new EnvVars(base);
+        envVars.put(NoticeEnvVars.JOB_STATUS, model.getStatusType().getLabel(locale));
+        return envVars;
     }
 
     /**

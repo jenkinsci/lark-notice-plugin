@@ -16,6 +16,7 @@ import java.util.Set;
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.LF;
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -52,6 +53,27 @@ public class NotificationDispatchExecutorTest {
                 message,
                 Set.of("START", "SUCCESS")
         );
+    }
+
+    /**
+     * Environment variables are resolved once per build, but the message locale is per robot, so
+     * ${JOB_STATUS} in a user template must follow the robot's locale rather than the JVM default.
+     */
+    @Test
+    public void jobStatusVariableShouldFollowTheRequestedLocale() {
+        BuildJobModel model = createModel();
+        EnvVars base = new EnvVars();
+        base.put("JOB_STATUS", "stale");
+
+        EnvVars english = NotificationDispatchExecutor.localizedEnvVars(base, model, Locale.US);
+        EnvVars chinese = NotificationDispatchExecutor.localizedEnvVars(base, model, Locale.SIMPLIFIED_CHINESE);
+
+        assertEquals(BuildStatusEnum.SUCCESS.getLabel(Locale.US), english.get("JOB_STATUS"));
+        assertEquals(BuildStatusEnum.SUCCESS.getLabel(Locale.SIMPLIFIED_CHINESE), chinese.get("JOB_STATUS"));
+        // Two robots on the same job must not see each other's label.
+        assertNotEquals(english.get("JOB_STATUS"), chinese.get("JOB_STATUS"));
+        // The shared base is left untouched so each configuration starts from the same state.
+        assertEquals("stale", base.get("JOB_STATUS"));
     }
 
     @Test

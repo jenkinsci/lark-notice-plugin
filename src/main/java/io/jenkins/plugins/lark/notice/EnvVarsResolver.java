@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Utility class for resolving and enriching environment variables with build-related information.
@@ -91,6 +92,8 @@ public final class EnvVarsResolver {
         envVars.put(NoticeEnvVars.JOB_NAME, model.getJobName());
         envVars.put(NoticeEnvVars.JOB_URL, model.getJobUrl());
         envVars.put(NoticeEnvVars.JOB_DURATION, model.getDuration());
-        envVars.put(NoticeEnvVars.JOB_STATUS, model.getStatusType().getLabel());
+        // Resolved once per build, before any robot's locale is known. NotificationDispatchExecutor
+        // overlays this per notifier configuration; the JVM default is only the fallback.
+        envVars.put(NoticeEnvVars.JOB_STATUS, model.getStatusType().getLabel(Locale.getDefault()));
     }
 }
