@@ -2,13 +2,13 @@ package io.jenkins.plugins.lark.notice.service;
 
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.service.BuildMessageLineFormatter.BuildMessageLineValues;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pins the Markdown rendering of the standard build information rows. The row set itself is covered
@@ -67,8 +67,8 @@ public class BuildMessageLineFormatterTest {
         List<String> lines = BuildMessageLineFormatter.buildBodyLines(
                 Locale.SIMPLIFIED_CHINESE, RobotType.LARK, values(null), false);
 
-        assertTrue(lines.get(0), lines.get(0).contains("**任务名称**"));
-        assertTrue(lines.get(4), lines.get(4).contains("**执行者**"));
+        assertTrue(lines.get(0).contains("**任务名称**"), lines.get(0));
+        assertTrue(lines.get(4).contains("**执行者**"), lines.get(4));
     }
 
     @Test

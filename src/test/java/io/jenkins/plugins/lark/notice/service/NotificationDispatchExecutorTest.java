@@ -8,16 +8,14 @@ import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.BuildJobModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RunUser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 import java.util.Set;
 
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.LF;
 import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link NotificationDispatchExecutor} internal helpers.

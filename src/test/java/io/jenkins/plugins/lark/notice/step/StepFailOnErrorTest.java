@@ -1,33 +1,27 @@
 package io.jenkins.plugins.lark.notice.step;
 
 import hudson.model.Result;
-import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.Before;
-import org.junit.Rule;
-import io.jenkins.plugins.lark.notice.testing.TestRobots;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Verifies that the pipeline step {@code failOnError} parameter controls whether a send failure fails the build.
  *
  * @author xm.z
  */
+@WithJenkins
 public class StepFailOnErrorTest {
+    private JenkinsRule jenkins;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         TestRobots.install("robot-unreachable", RobotProtocolType.LARK_COMPATIBLE, "http://127.0.0.1:1/open-apis/bot/v2/hook/x");
     }
 

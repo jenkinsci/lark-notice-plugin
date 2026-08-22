@@ -3,7 +3,9 @@ package io.jenkins.plugins.lark.notice.testing;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,15 +18,15 @@ import java.util.concurrent.atomic.AtomicReference;
  * A throwaway HTTP server standing in for a robot webhook, capturing the request body so tests can
  * assert on the exact JSON that would have gone over the wire.
  *
- * <p>Use it as a {@code @Rule}; the server starts before {@code @Before} methods run, so a robot
+ * <p>Register it as an extension; its callback runs before {@code @BeforeEach} methods, so a robot
  * can be pointed at {@link #url()} during setup:
  *
  * <pre>{@code
- * @Rule
- * public WebhookServer webhook = WebhookServer.lark();
+ * @RegisterExtension
+ * final WebhookServer webhook = WebhookServer.lark();
  * }</pre>
  */
-public final class WebhookServer extends ExternalResource {
+public final class WebhookServer implements BeforeEachCallback, AfterEachCallback {
 
     private final String path;
 
@@ -71,7 +73,7 @@ public final class WebhookServer extends ExternalResource {
     }
 
     @Override
-    protected void before() throws IOException {
+    public void beforeEach(ExtensionContext context) throws IOException {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext(path, exchange -> {
             requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
@@ -86,7 +88,7 @@ public final class WebhookServer extends ExternalResource {
     }
 
     @Override
-    protected void after() {
+    public void afterEach(ExtensionContext context) {
         if (server != null) {
             server.stop(0);
         }

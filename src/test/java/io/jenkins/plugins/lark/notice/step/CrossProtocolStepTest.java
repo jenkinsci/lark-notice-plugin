@@ -1,37 +1,30 @@
 package io.jenkins.plugins.lark.notice.step;
 
 import hudson.model.Result;
-import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
-import io.jenkins.plugins.lark.notice.sdk.MessageSenderRegistry;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.Rule;
-import io.jenkins.plugins.lark.notice.testing.TestRobots;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies that pointing a platform-specific step at a robot of another protocol produces a
  * readable dispatcher failure instead of a {@link ClassCastException} escaping into the build log.
  */
+@WithJenkins
 public class CrossProtocolStepTest {
+    private JenkinsRule jenkins;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         TestRobots.install("robot-lark", RobotProtocolType.LARK_COMPATIBLE, "http://127.0.0.1:1/open-apis/bot/v2/hook/x");
     }
 
@@ -47,11 +40,11 @@ public class CrossProtocolStepTest {
         assertFalse(log.contains("ClassCastException"));
         // The wording is localised, so assert on the parts that never are: the payload type that
         // did not fit, the robot's actual protocol, and the step the user should switch to.
-        assertTrue(log, log.contains("WeComPayload"));
-        assertTrue(log, log.contains("LarkPayload"));
-        assertTrue(log, log.contains("LARK_COMPATIBLE"));
-        assertTrue(log, log.contains("robot-lark"));
-        assertTrue(log, log.contains("lark"));
+        assertTrue(log.contains("WeComPayload"), log);
+        assertTrue(log.contains("LarkPayload"), log);
+        assertTrue(log.contains("LARK_COMPATIBLE"), log);
+        assertTrue(log.contains("robot-lark"), log);
+        assertTrue(log.contains("lark"), log);
     }
 
     @Test

@@ -3,27 +3,26 @@ package io.jenkins.plugins.lark.notice.config;
 import io.jenkins.plugins.lark.notice.config.property.LarkBranchJobProperty;
 import io.jenkins.plugins.lark.notice.config.property.LarkJobProperty;
 import io.jenkins.plugins.lark.notice.service.NotifierConfigService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for default notifier config lists exposed by Jenkins descriptors.
  *
  * @author xm.z
  */
+@WithJenkins
 public class NotifierConfigDescriptorDefaultsTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static LarkRobotConfig createRobot(String id) {
         return new LarkRobotConfig(
@@ -56,8 +55,9 @@ public class NotifierConfigDescriptorDefaultsTest {
                 .collect(Collectors.toList());
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>());
     }
 

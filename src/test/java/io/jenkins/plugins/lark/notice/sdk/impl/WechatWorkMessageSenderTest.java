@@ -3,33 +3,35 @@ package io.jenkins.plugins.lark.notice.sdk.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
-import io.jenkins.plugins.lark.notice.enums.RobotType;
-import io.jenkins.plugins.lark.notice.model.*;
-import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
+import io.jenkins.plugins.lark.notice.enums.RobotType;
+import io.jenkins.plugins.lark.notice.model.BuildContext;
+import io.jenkins.plugins.lark.notice.model.BuildJobModel;
+import io.jenkins.plugins.lark.notice.model.CardField;
+import io.jenkins.plugins.lark.notice.model.MessageIntent;
+import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.DispatchTarget;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for WeCom message payload generation.
  */
 public class WechatWorkMessageSenderTest {
 
-    @Rule
-    public WebhookServer webhook = WebhookServer.weCom();
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.weCom();
 
     private static void assertHorizontalContent(JsonNode content, int type, String key, String value, String url) {
         assertEquals(type, content.path("type").asInt());

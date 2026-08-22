@@ -16,26 +16,25 @@ import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.MessageSenderRegistry;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for service-layer components introduced by notification refactoring.
  *
  * @author xm.z
  */
+@WithJenkins
 public class NotificationServiceLayerTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static LarkRobotConfig createRobot(String id) {
         return new LarkRobotConfig(
@@ -62,8 +61,9 @@ public class NotificationServiceLayerTest {
         );
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>());
         LarkGlobalConfig.getInstance().setFailBuildOnNotificationFailure(true);
         MessageSenderRegistry.getInstance().clear();
@@ -84,7 +84,7 @@ public class NotificationServiceLayerTest {
         assertEquals(2, provider.getMergedNotifierConfigs().size());
         assertEquals(2, provider.getEnabledNotifierConfigs().size());
         assertEquals(1, provider.getAvailableNotifierConfigs().size());
-        assertEquals(robot1.getId(), provider.getAvailableNotifierConfigs().get(0).getRobotId());
+        assertEquals(robot1.getId(), provider.getAvailableNotifierConfigs().getFirst().getRobotId());
     }
 
     @Test
@@ -101,9 +101,9 @@ public class NotificationServiceLayerTest {
         List<LarkNotifierConfig> merged = provider.getMergedNotifierConfigs();
 
         assertEquals(1, merged.size());
-        assertEquals("first", merged.get(0).getTitle());
-        assertTrue(merged.get(0).isChecked());
-        assertFalse(merged.get(0).isDisabled());
+        assertEquals("first", merged.getFirst().getTitle());
+        assertTrue(merged.getFirst().isChecked());
+        assertFalse(merged.getFirst().isDisabled());
     }
 
     @Test

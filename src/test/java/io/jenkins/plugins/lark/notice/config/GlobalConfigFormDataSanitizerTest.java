@@ -3,9 +3,9 @@ package io.jenkins.plugins.lark.notice.config;
 import hudson.model.Descriptor.FormException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for global configuration form payload normalization.

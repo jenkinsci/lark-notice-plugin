@@ -13,26 +13,26 @@ import org.htmlunit.HttpMethod;
 import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
 import org.htmlunit.util.NameValuePair;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the Lark management link metadata and bindings.
  *
  * @author xm.z
  */
+@WithJenkins
 public class LarkManagementLinkTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static io.jenkins.plugins.lark.notice.config.snapshot.LarkConfigSnapshot createImportPayload() {
         LarkGlobalConfig source = new LarkGlobalConfig(
@@ -54,6 +54,11 @@ public class LarkManagementLinkTest {
         );
         robotConfig.setRetryConfig(new LarkRetryConfig(true, 3, 500, 5000, 2.0d, 0.2d));
         return robotConfig;
+    }
+
+    @BeforeEach
+    public void injectJenkins(JenkinsRule rule) {
+        this.jenkins = rule;
     }
 
     @Test

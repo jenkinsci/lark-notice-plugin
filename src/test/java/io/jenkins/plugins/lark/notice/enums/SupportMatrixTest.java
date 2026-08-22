@@ -1,16 +1,13 @@
 package io.jenkins.plugins.lark.notice.enums;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Pins the full protocol × message-type support matrix. Adding a value to {@link MsgTypeEnum}
@@ -37,8 +34,8 @@ public class SupportMatrixTest {
     @Test
     public void everyProtocolShouldDeclareItsExactSupportedSet() {
         for (RobotProtocolType protocol : RobotProtocolType.values()) {
-            assertEquals("supported types for " + protocol,
-                    EXPECTED.get(protocol), protocol.supportedTypes());
+            assertEquals(EXPECTED.get(protocol), protocol.supportedTypes(),
+                    "supported types for " + protocol);
         }
     }
 
@@ -46,8 +43,8 @@ public class SupportMatrixTest {
     public void everyMessageTypeShouldBeCoveredByTheMatrix() {
         for (RobotProtocolType protocol : RobotProtocolType.values()) {
             for (MsgTypeEnum type : MsgTypeEnum.values()) {
-                assertEquals(protocol + " / " + type,
-                        EXPECTED.get(protocol).contains(type), protocol.supports(type));
+                assertEquals(EXPECTED.get(protocol).contains(type), protocol.supports(type),
+                        protocol + " / " + type);
             }
         }
     }
@@ -62,7 +59,7 @@ public class SupportMatrixTest {
             for (RobotProtocolType protocol : RobotProtocolType.values()) {
                 anywhere |= protocol.supports(type);
             }
-            assertTrue(type + " is not supported by any protocol", anywhere);
+            assertTrue(anywhere, type + " is not supported by any protocol");
         }
     }
 

@@ -42,12 +42,12 @@ public final class BuildFields {
      *
      * @param locale       locale used for the labels
      * @param projectName  Jenkins project display name
-     * @param projectUrl    absolute project URL, or {@code null} for a non-linking row
-     * @param jobName       build run display name
-     * @param jobUrl        absolute run URL, or {@code null} for a non-linking row
-     * @param statusLabel   build status, already localised by the caller
+     * @param projectUrl   absolute project URL, or {@code null} for a non-linking row
+     * @param jobName      build run display name
+     * @param jobUrl       absolute run URL, or {@code null} for a non-linking row
+     * @param statusLabel  build status, already localised by the caller
      * @param duration     build duration
-     * @param executorName  who or what triggered the build
+     * @param executorName who or what triggered the build
      * @return ordered rows
      */
     public static List<BuildField> of(Locale locale,

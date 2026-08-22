@@ -8,16 +8,15 @@ import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Baseline tests pinning the JSON shape produced by {@link DingMessageSender} for every message
@@ -25,8 +24,8 @@ import static org.junit.Assert.*;
  */
 public class DingMessageSenderTest {
 
-    @Rule
-    public WebhookServer webhook = WebhookServer.dingTalk();
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.dingTalk();
 
     private DingMessageSender sender() {
         return sender(null);

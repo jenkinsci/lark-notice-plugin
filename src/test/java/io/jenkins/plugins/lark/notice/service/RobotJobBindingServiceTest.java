@@ -8,27 +8,23 @@ import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.tools.ApiResponse;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the standalone "robot job binding" management page: loading the job list with its filters,
  * and applying bind / unbind selections. This is the largest untested surface in the plugin and the
  * one that writes to other people's job configuration, so the round trip matters.
  */
+@WithJenkins
 public class RobotJobBindingServiceTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static boolean isOk(ApiResponse response) {
         return response.toJson().getBoolean("ok");
@@ -42,8 +38,9 @@ public class RobotJobBindingServiceTest {
         return data(response).getJSONArray("jobs");
     }
 
-    @Before
-    public void installRobot() {
+    @BeforeEach
+    public void installRobot(JenkinsRule rule) {
+        this.jenkins = rule;
         TestRobots.install("robot-a", RobotProtocolType.DING_TALK,
                 "http://127.0.0.1:1/robot/send?access_token=t");
     }

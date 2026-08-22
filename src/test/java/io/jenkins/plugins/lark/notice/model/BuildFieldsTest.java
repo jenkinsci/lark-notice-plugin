@@ -1,13 +1,13 @@
 package io.jenkins.plugins.lark.notice.model;
 
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Pins the canonical build information rows, which both the Markdown formatter and the platform

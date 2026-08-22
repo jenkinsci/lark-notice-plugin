@@ -102,8 +102,8 @@ public class LarkNotifierConfig implements Describable<LarkNotifierConfig> {
      * @param raw             Whether to use raw message format
      * @param disabled        Whether the configuration is disabled
      * @param checked         Whether the configuration is selected
-     * @param robotId   id of the global robot this configuration targets
-     * @param robotName cached display name, shown when the robot is missing
+     * @param robotId         id of the global robot this configuration targets
+     * @param robotName       cached display name, shown when the robot is missing
      * @param atAll           Whether to @mention all users
      * @param atUserId        OpenID of the user(s) to @mention
      * @param title           Message title

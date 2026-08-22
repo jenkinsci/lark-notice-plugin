@@ -8,18 +8,17 @@ import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Baseline tests pinning the JSON shape produced by {@link LarkMessageSender} for every message
@@ -28,8 +27,8 @@ import static org.junit.Assert.*;
  */
 public class LarkMessageSenderTest {
 
-    @Rule
-    public WebhookServer webhook = WebhookServer.lark();
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.lark();
 
     private LarkMessageSender sender() {
         return sender(null);

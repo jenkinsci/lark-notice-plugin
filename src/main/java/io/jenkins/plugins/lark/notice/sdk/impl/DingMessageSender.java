@@ -5,11 +5,7 @@ import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
-import io.jenkins.plugins.lark.notice.sdk.model.ding.DingCardMessage;
-import io.jenkins.plugins.lark.notice.sdk.model.ding.DingFeedCardMessage;
-import io.jenkins.plugins.lark.notice.sdk.model.ding.DingLinkMessage;
-import io.jenkins.plugins.lark.notice.sdk.model.ding.DingMdMessage;
-import io.jenkins.plugins.lark.notice.sdk.model.ding.DingTextMessage;
+import io.jenkins.plugins.lark.notice.sdk.model.ding.*;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,15 +26,6 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
         super(robotConfig);
     }
 
-    @Override
-    public SendResult sendFeedCard(BuildContext ctx, MessageIntent intent, DingPayload payload) {
-        List<DingFeedCardMessage.FeedCardLink> links = payload == null ? null : payload.getFeedCardLinks();
-        if (CollectionUtils.isEmpty(links)) {
-            return SendResult.fail("A feedCard message requires at least one link entry.");
-        }
-        return sendMessage(JsonUtils.toJson(DingFeedCardMessage.build(links)), signHeaders());
-    }
-
     /**
      * Prepends the user-defined card rows to the body. DingTalk action cards carry a Markdown body,
      * so custom rows render as body lines rather than a structured list.
@@ -50,6 +37,15 @@ public class DingMessageSender extends AbstractMessageSender<DingPayload> {
             return text;
         }
         return StringUtils.isBlank(text) ? fieldLines : fieldLines + LF + LF + text;
+    }
+
+    @Override
+    public SendResult sendFeedCard(BuildContext ctx, MessageIntent intent, DingPayload payload) {
+        List<DingFeedCardMessage.FeedCardLink> links = payload == null ? null : payload.getFeedCardLinks();
+        if (CollectionUtils.isEmpty(links)) {
+            return SendResult.fail("A feedCard message requires at least one link entry.");
+        }
+        return sendMessage(JsonUtils.toJson(DingFeedCardMessage.build(links)), signHeaders());
     }
 
     @Override

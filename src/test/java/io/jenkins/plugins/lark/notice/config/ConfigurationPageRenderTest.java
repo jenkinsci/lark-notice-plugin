@@ -15,27 +15,26 @@ import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.util.NameValuePair;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Rendering tests for the plugin configuration pages.
  *
  * @author xm.z
  */
+@WithJenkins
 public class ConfigurationPageRenderTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static LarkRobotConfig createRobot(String id) {
         return new LarkRobotConfig(
@@ -56,8 +55,9 @@ public class ConfigurationPageRenderTest {
         return count;
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(
                 createRobot("robot-a"),
                 createRobot("robot-b")
@@ -333,7 +333,7 @@ public class ConfigurationPageRenderTest {
         createJobFromNewJobPage("new-ui-freestyle", "hudson.model.FreeStyleProject");
 
         FreeStyleProject project = jenkins.jenkins.getItemByFullName("new-ui-freestyle", FreeStyleProject.class);
-        assertNotNull("Expected freestyle project to be created.", project);
+        assertNotNull(project, "Expected freestyle project to be created.");
         project.addProperty(new LarkJobProperty(null));
         project.getPublishersList().add(new LarkNotifier(null));
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
@@ -351,7 +351,7 @@ public class ConfigurationPageRenderTest {
         createJobFromNewJobPage("new-ui-pipeline", "org.jenkinsci.plugins.workflow.job.WorkflowJob");
 
         Job<?, ?> pipelineJob = jenkins.jenkins.getItemByFullName("new-ui-pipeline", Job.class);
-        assertNotNull("Expected pipeline job to be created.", pipelineJob);
+        assertNotNull(pipelineJob, "Expected pipeline job to be created.");
         pipelineJob.addProperty(new LarkJobProperty(null));
 
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
@@ -370,7 +370,7 @@ public class ConfigurationPageRenderTest {
 
         WorkflowMultiBranchProject project =
                 jenkins.jenkins.getItemByFullName("new-ui-multibranch", WorkflowMultiBranchProject.class);
-        assertNotNull("Expected multibranch project to be created.", project);
+        assertNotNull(project, "Expected multibranch project to be created.");
         BranchSource branchSource = new BranchSource(new SingleSCMSource("main", new NullSCM()));
         branchSource.setStrategy(new DefaultBranchPropertyStrategy(new BranchProperty[]{new LarkBranchJobProperty(null)}));
         project.getSourcesList().add(branchSource);

@@ -3,34 +3,33 @@ package io.jenkins.plugins.lark.notice.step.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import hudson.model.Result;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * End-to-end tests for the {@code lark} step covering the message types whose payload used to be
  * smuggled through the shared text field. The environment-variable assertions matter most: the old
  * path expanded the serialised blob as one string, so per-field expansion must keep working.
  */
+@WithJenkins
 public class LarkStepPipelineTest {
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.lark();
+    private JenkinsRule jenkins;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    @Rule
-    public WebhookServer webhook = WebhookServer.lark();
-
-    @Before
-    public void installRobot() {
+    @BeforeEach
+    public void installRobot(JenkinsRule rule) {
+        this.jenkins = rule;
         TestRobots.install("robot-lark", RobotProtocolType.LARK_COMPATIBLE, webhook.url());
     }
 

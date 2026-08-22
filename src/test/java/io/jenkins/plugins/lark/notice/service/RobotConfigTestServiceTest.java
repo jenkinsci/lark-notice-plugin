@@ -5,26 +5,24 @@ import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
 import io.jenkins.plugins.lark.notice.tools.ApiResponse;
 import net.sf.json.JSONObject;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the robot configuration test button. It sends with values straight from the form, so the
  * important cases are the ones where the form and the saved configuration disagree — including a
  * robot that has never been saved.
  */
+@WithJenkins
 public class RobotConfigTestServiceTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    @Rule
-    public WebhookServer webhook = WebhookServer.dingTalk();
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.dingTalk();
+    private JenkinsRule jenkins;
 
     private static boolean isOk(ApiResponse response) {
         JSONObject json = response.toJson();
@@ -33,6 +31,11 @@ public class RobotConfigTestServiceTest {
 
     private static String message(ApiResponse response) {
         return response.toJson().optString("message");
+    }
+
+    @BeforeEach
+    public void injectJenkins(JenkinsRule rule) {
+        this.jenkins = rule;
     }
 
     private ApiResponse test(String webhookUrl) {
@@ -51,7 +54,7 @@ public class RobotConfigTestServiceTest {
 
         ApiResponse response = test(webhook.url());
 
-        assertTrue(message(response), isOk(response));
+        assertTrue(isOk(response), message(response));
         assertEquals("actionCard", webhook.json().path("msgtype").asText());
     }
 
@@ -65,7 +68,7 @@ public class RobotConfigTestServiceTest {
 
         ApiResponse response = test(webhook.url());
 
-        assertTrue(message(response), isOk(response));
+        assertTrue(isOk(response), message(response));
         // A DingTalk action card, sent to the form's webhook, not the saved Lark one.
         assertEquals("actionCard", webhook.json().path("msgtype").asText());
     }

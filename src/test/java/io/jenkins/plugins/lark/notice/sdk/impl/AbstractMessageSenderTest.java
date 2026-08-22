@@ -10,14 +10,10 @@ import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the shared HTTP layer in {@link AbstractMessageSender}: how signing credentials reach the
@@ -26,11 +22,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class AbstractMessageSenderTest {
 
-    @Rule
-    public WebhookServer webhook = WebhookServer.dingTalk();
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.dingTalk();
 
-    @Rule
-    public WebhookServer larkWebhook = WebhookServer.lark();
+    @RegisterExtension
+    final WebhookServer larkWebhook = WebhookServer.lark();
 
     private static MessageIntent textIntent() {
         return MessageIntent.builder().type(MsgTypeEnum.TEXT).text("hello").build();
@@ -50,9 +46,9 @@ public class AbstractMessageSenderTest {
 
         assertTrue(result.isOk());
         String uri = webhook.uri();
-        assertTrue(uri, uri.contains("access_token=t"));
-        assertTrue(uri, uri.contains("&timestamp="));
-        assertTrue(uri, uri.contains("&sign="));
+        assertTrue(uri.contains("access_token=t"), uri);
+        assertTrue(uri.contains("&timestamp="), uri);
+        assertTrue(uri.contains("&sign="), uri);
         // The credentials go in the URL, not in headers.
         assertNull(webhook.header("timestamp"));
         assertNull(webhook.header("sign"));
@@ -64,8 +60,8 @@ public class AbstractMessageSenderTest {
                 .sendText(BuildContext.builder().build(), textIntent(), DingPayload.builder().build());
 
         assertTrue(result.isOk());
-        assertFalse(webhook.uri(), webhook.uri().contains("timestamp="));
-        assertFalse(webhook.uri(), webhook.uri().contains("sign="));
+        assertFalse(webhook.uri().contains("timestamp="), webhook.uri());
+        assertFalse(webhook.uri().contains("sign="), webhook.uri());
     }
 
     @Test

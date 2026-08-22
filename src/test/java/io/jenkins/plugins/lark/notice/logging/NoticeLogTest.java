@@ -1,15 +1,15 @@
 package io.jenkins.plugins.lark.notice.logging;
 
 import hudson.model.TaskListener;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link NoticeLog}.
@@ -22,7 +22,7 @@ public class NoticeLogTest {
         return () -> new PrintStream(output, true, StandardCharsets.UTF_8);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         NoticeLogSettings.reset();
     }

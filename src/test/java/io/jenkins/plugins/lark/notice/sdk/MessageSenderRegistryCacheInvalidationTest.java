@@ -3,24 +3,23 @@ package io.jenkins.plugins.lark.notice.sdk;
 import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
 import io.jenkins.plugins.lark.notice.config.LarkProxyConfig;
 import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests cache invalidation behavior in {@link MessageSenderRegistry}.
  */
+@WithJenkins
 public class MessageSenderRegistryCacheInvalidationTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static LarkRobotConfig createRobot(String id) {
         return new LarkRobotConfig(
@@ -31,8 +30,9 @@ public class MessageSenderRegistryCacheInvalidationTest {
         );
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp(JenkinsRule rule) {
+        this.jenkins = rule;
         MessageSenderRegistry.getInstance().clear();
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(createRobot("robot-a"))));
         LarkGlobalConfig.getInstance().setProxyConfig(null);

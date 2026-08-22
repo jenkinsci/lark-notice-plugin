@@ -4,19 +4,25 @@ import hudson.EnvVars;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.model.ImgModel;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.view.img.ImgElement;
-import org.junit.Rule;
-import org.junit.Test;
+import io.jenkins.plugins.lark.notice.step.AbstractStep;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.lang.reflect.Method;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@WithJenkins
 public class LarkStepTest {
+    private JenkinsRule jenkins;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    @BeforeEach
+    public void injectJenkins(JenkinsRule rule) {
+        this.jenkins = rule;
+    }
 
     @Test
     public void buildImgShouldExpandEnvironmentVariablesForAllDisplayFields() throws Exception {
@@ -36,7 +42,9 @@ public class LarkStepTest {
         envVars.put("IMG_TITLE", "Build Report");
         envVars.put("IMG_ALT", "Preview image");
 
-        Method buildImg = LarkStep.class.getDeclaredMethod("buildImg", EnvVars.class, ImgModel.class);
+        // Declared on AbstractStep, so walk up rather than using getDeclaredMethod on LarkStep:
+        // an override that only delegated to super used to live here and removing it broke this test.
+        Method buildImg = AbstractStep.class.getDeclaredMethod("buildImg", EnvVars.class, ImgModel.class);
         buildImg.setAccessible(true);
         ImgElement imgElement = (ImgElement) buildImg.invoke(step, envVars, imgModel);
 

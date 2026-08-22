@@ -4,14 +4,14 @@ import io.jenkins.plugins.lark.notice.config.*;
 import io.jenkins.plugins.lark.notice.enums.MessageLocaleStrategy;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
 import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for snapshot import/export mapping and validation.

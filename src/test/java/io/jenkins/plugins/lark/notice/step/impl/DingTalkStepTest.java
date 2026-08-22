@@ -3,33 +3,32 @@ package io.jenkins.plugins.lark.notice.step.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import hudson.model.Result;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import io.jenkins.plugins.lark.notice.testing.WebhookServer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * End-to-end baseline tests for the {@code dingTalk} pipeline step: script arguments through the
  * dispatcher and sender, asserted against the real captured request body. These pin the wire
  * format across step-layer refactors.
  */
+@WithJenkins
 public class DingTalkStepTest {
+    @RegisterExtension
+    final WebhookServer webhook = WebhookServer.dingTalk();
+    private JenkinsRule jenkins;
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    @Rule
-    public WebhookServer webhook = WebhookServer.dingTalk();
-
-    @Before
-    public void installRobot() {
+    @BeforeEach
+    public void installRobot(JenkinsRule rule) {
+        this.jenkins = rule;
         TestRobots.install("robot-ding", RobotProtocolType.DING_TALK, webhook.url());
     }
 

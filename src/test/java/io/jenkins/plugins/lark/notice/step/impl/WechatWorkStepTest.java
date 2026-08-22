@@ -14,25 +14,30 @@ import io.jenkins.plugins.lark.notice.i18n.NoticeI18n;
 import io.jenkins.plugins.lark.notice.model.CardField;
 import io.jenkins.plugins.lark.notice.model.CardFieldModel;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
-import org.junit.Rule;
 import io.jenkins.plugins.lark.notice.testing.TestRobots;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@WithJenkins
 public class WechatWorkStepTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     private static void assertDefaultButton(Button button, String expectedText, String expectedUrlSuffix) {
         assertEquals(expectedText, button.getText());
         assertTrue(button.getUrl().endsWith(expectedUrlSuffix));
+    }
+
+    @BeforeEach
+    public void injectJenkins(JenkinsRule rule) {
+        this.jenkins = rule;
     }
 
     @Test

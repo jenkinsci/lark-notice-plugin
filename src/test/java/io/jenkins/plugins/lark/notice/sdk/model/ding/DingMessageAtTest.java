@@ -1,9 +1,9 @@
 package io.jenkins.plugins.lark.notice.sdk.model.ding;
 
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.at.At;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for DingTalk mention rendering.
