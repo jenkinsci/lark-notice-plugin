@@ -248,7 +248,7 @@ public class DingTalkStep extends AbstractStep {
         // Default buttons only make sense on the btns branch; when singleTitle is set the sender
         // renders a single jump action and ignores the button list entirely.
         if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type) && StringUtils.isBlank(singleTitle)) {
-            String jobUrl = rootPath + run.getUrl();
+            String jobUrl = jobUrl(run);
             resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);
         }
 
@@ -270,7 +270,7 @@ public class DingTalkStep extends AbstractStep {
                 .build();
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
 
-        return service.send(listener, robotId, ctx, intent, payload);
+        return dispatcher().send(listener, robotId, ctx, intent, payload);
     }
 
     /**

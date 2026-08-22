@@ -38,18 +38,6 @@ public class Utils {
     }
 
     /**
-     * Creates a default list of buttons for a given job URL.
-     * This method constructs buttons for common actions such as viewing change logs and accessing the console,
-     * making it easier to generate consistent user interfaces across different parts of the application.
-     *
-     * @param jobUrl The base URL for the job, used to construct specific action URLs for the buttons.
-     * @return A list of {@link Button} objects, each representing an action that can be taken from the UI.
-     */
-    public static List<Button> createDefaultButtons(String jobUrl) {
-        return createDefaultButtons(jobUrl, Locale.getDefault());
-    }
-
-    /**
      * Creates a default list of buttons for a given job URL using the provided locale.
      *
      * @param jobUrl The base URL for the job, used to construct specific action URLs for the buttons.

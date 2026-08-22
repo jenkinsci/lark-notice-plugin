@@ -136,7 +136,7 @@ public class MessageDispatcher {
                 Thread.sleep(delayMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return fail(listener, robotId, type, "Retry interrupted");
+                return fail(listener, robotId, type, Messages.dispatcher_error_retry_interrupted());
             }
             attempt++;
         }
@@ -190,11 +190,10 @@ public class MessageDispatcher {
         }
         RobotProtocolType senderProtocol = PAYLOAD_PROTOCOLS.get(sender.payloadType());
         String hint = senderProtocol == null ? "" : String.format(
-                " Robot %s speaks %s; use the %s step for it.",
+                Messages.dispatcher_error_payload_mismatch_hint(),
                 robotId, senderProtocol, STEP_NAMES.get(senderProtocol));
-        return fail(listener, robotId, type, String.format(
-                "Message payload %s does not match the %s robot resolved for id %s.%s",
-                payload.getClass().getSimpleName(), sender.payloadType().getSimpleName(), robotId, hint));
+        return fail(listener, robotId, type, String.format(Messages.dispatcher_error_payload_mismatch(),
+                payload.getClass().getSimpleName(), robotId, sender.payloadType().getSimpleName()) + hint);
     }
 
     /**
@@ -203,7 +202,7 @@ public class MessageDispatcher {
     private SendResult validateSupport(TaskListener listener, String robotId, MsgTypeEnum type, RobotProtocolType protocol) {
         if (protocol != null && !protocol.supports(type)) {
             return fail(listener, robotId, type,
-                    String.format("Message type %s is not supported by %s robots.", type, protocol));
+                    String.format(Messages.dispatcher_error_type_unsupported(), type, protocol));
         }
         return null;
     }

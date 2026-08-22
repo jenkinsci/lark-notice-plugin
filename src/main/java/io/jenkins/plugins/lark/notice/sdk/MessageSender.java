@@ -1,5 +1,6 @@
 package io.jenkins.plugins.lark.notice.sdk;
 
+import io.jenkins.plugins.lark.notice.Messages;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
@@ -56,7 +57,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendImage(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**
@@ -68,7 +69,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendShareChat(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**
@@ -80,7 +81,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendLink(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**
@@ -92,7 +93,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendPost(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**
@@ -104,7 +105,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendCard(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**
@@ -116,7 +117,7 @@ public interface MessageSender<T extends PlatformPayload> {
      * @return failure result by default
      */
     default SendResult sendFeedCard(BuildContext ctx, MessageIntent intent, T payload) {
-        return SendResult.fail("This type of message is not supported.");
+        return SendResult.fail(Messages.sender_error_type_unsupported());
     }
 
     /**

@@ -24,7 +24,6 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.springframework.util.CollectionUtils;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -38,10 +37,6 @@ import java.util.stream.Collectors;
  */
 @Getter
 public abstract class AbstractStep extends Step {
-
-    protected final MessageDispatcher service = MessageDispatcher.getInstance();
-
-    protected final String rootPath = Jenkins.get().getRootUrl();
 
     protected String robot;
 
@@ -97,6 +92,27 @@ public abstract class AbstractStep extends Step {
         return cardFields.stream()
                 .map(model -> model.toCardField(value -> expandNullable(envVars, value)))
                 .toList();
+    }
+
+    /**
+     * Returns the dispatcher to send through.
+     *
+     * @return shared dispatcher
+     */
+    protected MessageDispatcher dispatcher() {
+        return MessageDispatcher.getInstance();
+    }
+
+    /**
+     * Builds the absolute URL of a build run. Resolved per send rather than once per step instance,
+     * because a step object is created while the pipeline script is evaluated and the Jenkins root
+     * URL can be reconfigured before the step actually runs.
+     *
+     * @param run build run
+     * @return absolute run URL
+     */
+    protected String jobUrl(Run<?, ?> run) {
+        return Jenkins.get().getRootUrl() + run.getUrl();
     }
 
     protected abstract SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener);
@@ -175,7 +191,7 @@ public abstract class AbstractStep extends Step {
      */
     protected BuildContext buildContext(Run<?, ?> run, TaskListener listener, BuildStatusEnum status, Locale locale) {
         RunUser executor = RunUser.getExecutor(run, listener);
-        String jobUrl = rootPath + run.getUrl();
+        String jobUrl = jobUrl(run);
         return BuildContext.builder()
                 .projectName(run.getParent().getFullDisplayName())
                 .projectUrl(run.getParent().getAbsoluteUrl())
@@ -192,7 +208,7 @@ public abstract class AbstractStep extends Step {
     /**
      * Base StepDescriptor that provides the shared required-context set.
      */
-    public abstract static class AbstractStepDescriptor extends StepDescriptor implements Serializable {
+    public abstract static class AbstractStepDescriptor extends StepDescriptor {
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {

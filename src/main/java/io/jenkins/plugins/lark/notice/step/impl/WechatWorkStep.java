@@ -241,7 +241,7 @@ public class WechatWorkStep extends AbstractStep {
     protected SendResult send(Run<?, ?> run, EnvVars envVars, TaskListener listener) {
         String robotId = envVars.expand(robot);
         MessageBundle bundle = buildMessage(run, envVars, listener, robotId);
-        return service.send(listener, robotId, bundle.ctx, bundle.intent, bundle.payload);
+        return dispatcher().send(listener, robotId, bundle.ctx, bundle.intent, bundle.payload);
     }
 
     /**
@@ -258,7 +258,7 @@ public class WechatWorkStep extends AbstractStep {
         Locale locale = resolveLocale(robotId);
         BuildContext ctx = buildContext(run, listener, noticeOccasion.buildStatus(), locale);
         String expandedText = envVars.expand(Utils.join(text));
-        String jobUrl = rootPath + run.getUrl();
+        String jobUrl = jobUrl(run);
         List<Button> resolvedButtons = expandButtons(envVars, buttons);
         if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type)) {
             resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);

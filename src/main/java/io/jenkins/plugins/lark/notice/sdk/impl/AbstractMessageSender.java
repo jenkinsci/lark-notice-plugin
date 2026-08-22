@@ -1,5 +1,6 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
+import io.jenkins.plugins.lark.notice.Messages;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.PlatformPayload;
@@ -58,10 +59,10 @@ public abstract class AbstractMessageSender<T extends PlatformPayload> implement
             return sendResult;
         } catch (ConnectException e) {
             log.error("Connection refused or unable to establish: {}, Webhook URL: {}", e.getMessage(), robotConfig.getWebhook(), e);
-            return SendResult.fail("Connection refused or unable to establish: " + e.getMessage());
+            return SendResult.fail(String.format(Messages.sender_error_connect_failed(), e.getMessage()));
         } catch (IOException e) {
             log.error("IO error occurred while sending Lark message: {}", e.getMessage(), e);
-            return SendResult.fail("IO error: " + e.getMessage());
+            return SendResult.fail(String.format(Messages.sender_error_io_failed(), e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to send Lark message", e);
             return SendResult.fail(e.getMessage());

@@ -45,9 +45,13 @@ public class CrossProtocolStepTest {
         String log = run.getLog();
 
         assertFalse(log.contains("ClassCastException"));
-        assertTrue(log.contains("does not match"));
-        assertTrue(log.contains("LARK_COMPATIBLE"));
-        assertTrue(log.contains("use the lark step"));
+        // The wording is localised, so assert on the parts that never are: the payload type that
+        // did not fit, the robot's actual protocol, and the step the user should switch to.
+        assertTrue(log, log.contains("WeComPayload"));
+        assertTrue(log, log.contains("LarkPayload"));
+        assertTrue(log, log.contains("LARK_COMPATIBLE"));
+        assertTrue(log, log.contains("robot-lark"));
+        assertTrue(log, log.contains("lark"));
     }
 
     @Test

@@ -10,12 +10,14 @@ import lombok.Data;
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+// imgKey / token below are Lark resource identifiers (image keys, built-in icon names),
+// not credentials, so the plaintext-storage warning does not apply.
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class UdIcon {
 
     /**
      * 图标的 token
      */
-    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private String token;
 
     /**

@@ -18,12 +18,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+// imgKey / token below are Lark resource identifiers (image keys, built-in icon names),
+// not credentials, so the plaintext-storage warning does not apply.
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class ImgModel implements Describable<ImgModel> {
 
     /**
      * The unique key associated with the image. This key is typically used to fetch or reference the image.
      */
-    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private String imgKey;
 
     /**

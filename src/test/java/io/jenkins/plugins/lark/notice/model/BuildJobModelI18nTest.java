@@ -54,12 +54,12 @@ public class BuildJobModelI18nTest {
         Locale previous = Locale.getDefault();
         try {
             Locale.setDefault(Locale.US);
-            List<Button> englishButtons = Utils.createDefaultButtons("https://example.com/job/1/");
+            List<Button> englishButtons = Utils.createDefaultButtons("https://example.com/job/1/", Locale.getDefault());
             assertEquals("Changelog", englishButtons.get(0).getText());
             assertEquals("Console", englishButtons.get(1).getText());
 
             Locale.setDefault(Locale.SIMPLIFIED_CHINESE);
-            List<Button> chineseButtons = Utils.createDefaultButtons("https://example.com/job/1/");
+            List<Button> chineseButtons = Utils.createDefaultButtons("https://example.com/job/1/", Locale.getDefault());
             assertEquals("更改记录", chineseButtons.get(0).getText());
             assertEquals("控制台", chineseButtons.get(1).getText());
         } finally {

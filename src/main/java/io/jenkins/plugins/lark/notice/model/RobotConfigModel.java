@@ -27,6 +27,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 @Data
 @Slf4j
+// This is a transient runtime view; the security keyword is persisted as a Secret in
+// LarkSecurityPolicyConfig and only materialises here for the duration of a send.
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class RobotConfigModel {
 
     private RobotType robotType;
@@ -44,7 +47,6 @@ public class RobotConfigModel {
     /**
      * Security key used for authentication.
      */
-    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private String keys;
 
     /**

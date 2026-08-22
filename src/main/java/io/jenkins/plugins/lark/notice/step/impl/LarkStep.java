@@ -31,7 +31,8 @@ import static io.jenkins.plugins.lark.notice.sdk.constant.Constants.defaultTitle
  * @author xm.z
  */
 @Getter
-@SuppressWarnings("unused")
+// imageKey is a Lark image resource id, not a credential, hence the plaintext-storage suppression.
+@SuppressWarnings({"unused", "lgtm[jenkins/plaintext-storage]"})
 public class LarkStep extends AbstractStep {
 
     /**
@@ -52,7 +53,6 @@ public class LarkStep extends AbstractStep {
     /**
      * The image key to be displayed in an IMAGE message.
      */
-    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private String imageKey;
 
     /**
@@ -213,7 +213,7 @@ public class LarkStep extends AbstractStep {
 
         List<Button> resolvedButtons = expandButtons(envVars, buttons);
         if (resolvedButtons == null && MsgTypeEnum.CARD.equals(type)) {
-            String jobUrl = rootPath + run.getUrl();
+            String jobUrl = jobUrl(run);
             resolvedButtons = Utils.createDefaultButtons(jobUrl, locale);
         }
 
@@ -233,7 +233,7 @@ public class LarkStep extends AbstractStep {
                 .bottomImg(buildImg(envVars, bottomImg))
                 .build();
 
-        return service.send(listener, robotId, ctx, intent, payload);
+        return dispatcher().send(listener, robotId, ctx, intent, payload);
     }
 
     /**

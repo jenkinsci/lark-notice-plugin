@@ -13,6 +13,9 @@ import java.io.Serializable;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+// imgKey / token below are Lark resource identifiers (image keys, built-in icon names),
+// not credentials, so the plaintext-storage warning does not apply.
+@SuppressWarnings("lgtm[jenkins/plaintext-storage]")
 public class LarkImageMessage extends BaseLarkMessage {
 
     private ImageContent content;
@@ -33,7 +36,6 @@ public class LarkImageMessage extends BaseLarkMessage {
     public static class ImageContent implements Serializable {
 
         @JsonProperty("image_key")
-        @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
         private String imageKey;
 
     }
