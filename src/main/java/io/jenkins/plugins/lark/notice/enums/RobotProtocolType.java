@@ -2,6 +2,7 @@ package io.jenkins.plugins.lark.notice.enums;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -76,14 +77,14 @@ public enum RobotProtocolType {
      * @return unmodifiable set of supported message types
      */
     public Set<MsgTypeEnum> supportedTypes() {
-        return switch (this) {
+        return Collections.unmodifiableSet(switch (this) {
             case LARK_COMPATIBLE -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.IMAGE, MsgTypeEnum.SHARE_CHAT,
                     MsgTypeEnum.POST, MsgTypeEnum.MARKDOWN, MsgTypeEnum.CARD);
             case DING_TALK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK,
                     MsgTypeEnum.CARD, MsgTypeEnum.FEED_CARD);
             case WECHAT_WORK -> EnumSet.of(MsgTypeEnum.TEXT, MsgTypeEnum.MARKDOWN, MsgTypeEnum.LINK,
                     MsgTypeEnum.POST, MsgTypeEnum.CARD);
-        };
+        });
     }
 
     /**

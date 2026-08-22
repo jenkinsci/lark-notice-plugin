@@ -8,6 +8,8 @@ import org.junit.rules.ExternalResource;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -29,6 +31,10 @@ public final class WebhookServer extends ExternalResource {
     private final String responseBody;
 
     private final AtomicReference<String> requestBody = new AtomicReference<>();
+
+    private final AtomicReference<String> requestUri = new AtomicReference<>();
+
+    private final AtomicReference<Map<String, List<String>>> requestHeaders = new AtomicReference<>();
 
     private HttpServer server;
 
@@ -69,6 +75,8 @@ public final class WebhookServer extends ExternalResource {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext(path, exchange -> {
             requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            requestUri.set(exchange.getRequestURI().toString());
+            requestHeaders.set(Map.copyOf(exchange.getRequestHeaders()));
             byte[] response = responseBody.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, response.length);
             exchange.getResponseBody().write(response);
@@ -106,6 +114,34 @@ public final class WebhookServer extends ExternalResource {
      */
     public String body() {
         return requestBody.get();
+    }
+
+    /**
+     * Returns the request URI of the last captured request, including its query string. DingTalk
+     * signing appends credentials to the URL rather than sending headers, so tests need this.
+     *
+     * @return request URI, or {@code null} when nothing was sent
+     */
+    public String uri() {
+        return requestUri.get();
+    }
+
+    /**
+     * Returns the first value of a header on the last captured request.
+     *
+     * @param name header name
+     * @return header value, or {@code null} when absent
+     */
+    public String header(String name) {
+        Map<String, List<String>> headers = requestHeaders.get();
+        if (headers == null) {
+            return null;
+        }
+        return headers.entrySet().stream()
+                .filter(entry -> entry.getKey().equalsIgnoreCase(name))
+                .flatMap(entry -> entry.getValue().stream())
+                .findFirst()
+                .orElse(null);
     }
 
     /**

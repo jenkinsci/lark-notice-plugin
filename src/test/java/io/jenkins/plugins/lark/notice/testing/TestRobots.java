@@ -59,12 +59,10 @@ public final class TestRobots {
      * @param id       robot id
      * @param protocol protocol family
      * @param webhook  webhook URL
-     * @return the installed robot
      */
-    public static LarkRobotConfig install(String id, RobotProtocolType protocol, String webhook) {
+    public static void install(String id, RobotProtocolType protocol, String webhook) {
         LarkRobotConfig robot = robot(id, id, protocol, webhook);
         install(robot);
-        return robot;
     }
 
     /**
