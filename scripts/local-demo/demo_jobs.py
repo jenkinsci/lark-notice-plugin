@@ -181,9 +181,13 @@ wechatWork robot: robot, type: 'LINK', title: '企微 LINK 图文（降级为 ma
         text: ['news 图文消息在企微上降级发送', "[打开构建](${{env.BUILD_URL}})"],
         messageUrl: "${{env.BUILD_URL}}"
 
+// 来源图标（source.icon_url）与图文图片（card_image.url）都必须是企微能访问的公网
+// http(s) 图片地址，这里写的是插件内置默认值，换成自己的图即可。
 wechatWork robot: robot, type: 'CARD', title: '企微 CARD 模板卡片',
         text: ["**${{job}}**", '模板卡片，带来源、引用区与按钮'],
         sourceDesc: 'Jenkins lark-notice',
+        sourceIconUrl: 'https://get.jenkins.io/art/jenkins-logo/favicon.ico',
+        cardImageUrl: 'https://www.jenkins.io/images/post-images/2025/07/24/redesigning-jenkins-part-two.png',
         quoteTitle: '构建摘要', quoteText: '本次构建由脚本式流水线触发',
         quoteUrl: "${{env.BUILD_URL}}",
         cardFields: [[keyname: '插件版本', value: '{version}'],

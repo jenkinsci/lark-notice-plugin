@@ -72,12 +72,13 @@ public class MessageIntent {
     private List<CardField> cardFields;
 
     /**
-     * Top image element shared by Lark cards and WeCom template cards.
+     * Top image element of a Lark card, carrying an uploaded image key.
      */
     private ImgElement topImg;
 
     /**
-     * Image URL used by DingTalk link messages and as a WeCom card image fallback.
+     * Image URL used by DingTalk link messages. WeCom card banners are a platform-specific field
+     * and travel in {@code WeComPayload} instead.
      */
     private String picUrl;
 

@@ -57,8 +57,8 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
      * Builds a news-notice template card from the layered message model.
      *
      * @param ctx     shared build context supplying default card rows when the payload does not override them
-     * @param intent  cross-platform rendering intent (title, images, buttons, click-through URL)
-     * @param payload WeCom-specific payload (custom card rows, source description, additional content)
+     * @param intent  cross-platform rendering intent (title, custom rows, buttons, click-through URL)
+     * @param payload WeCom-specific payload (source line, banner image, quote block, additional content)
      * @return assembled template card message
      */
     public static WechatWorkTemplateCardMessage build(BuildContext ctx, MessageIntent intent,
@@ -69,7 +69,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         card.setCardType(CARD_TYPE_NEWS_NOTICE);
         card.setSource(buildSource(ctx, payload));
         card.setMainTitle(new MainTitle(title, null));
-        card.setCardImage(buildCardImage(intent));
+        card.setCardImage(buildCardImage(payload));
         card.setHorizontalContentList(resolveHorizontalContentList(ctx, intent));
         card.setVerticalContentList(resolveVerticalContentList(ctx, intent, payload));
         card.setQuoteArea(resolveQuoteArea(payload));
@@ -78,13 +78,20 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
         return new WechatWorkTemplateCardMessage(card);
     }
 
+    /**
+     * Builds the header source line. The icon is only taken from the payload when it is a public
+     * HTTP(S) URL, because WeCom rejects anything else and would drop the whole source block.
+     */
     private static Source buildSource(BuildContext ctx, WeComPayload payload) {
         String desc = StringUtils.defaultIfBlank(payload.getSourceDesc(), DEFAULT_SOURCE_DESCRIPTION);
-        return new Source(DEFAULT_SOURCE_ICON_URL, desc, resolveSourceColor(ctx.getStatusType()));
+        String iconUrl = isHttpUrl(payload.getSourceIconUrl())
+                ? payload.getSourceIconUrl()
+                : DEFAULT_SOURCE_ICON_URL;
+        return new Source(iconUrl, desc, resolveSourceColor(ctx.getStatusType()));
     }
 
-    private static CardImage buildCardImage(MessageIntent intent) {
-        return new CardImage(resolveCardImageUrl(intent), CARD_IMAGE_ASPECT_RATIO);
+    private static CardImage buildCardImage(WeComPayload payload) {
+        return new CardImage(resolveCardImageUrl(payload), CARD_IMAGE_ASPECT_RATIO);
     }
 
     private static String resolveActionUrl(MessageIntent intent) {
@@ -95,18 +102,12 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
     }
 
     /**
-     * Resolves the card image URL. WeCom only accepts public HTTP(S) URLs, so image keys (used by
-     * Lark) are ignored. Priority: {@link MessageIntent#getPicUrl()} then a resolved HTTP top-image
-     * URL, then the built-in Jenkins image. This fixes the "card image cannot be set" issue.
+     * Resolves the card banner URL. WeCom only accepts public HTTP(S) URLs, so anything else — a
+     * Lark image key, a local path — falls back to the built-in image instead of being sent and
+     * rejected.
      */
-    private static String resolveCardImageUrl(MessageIntent intent) {
-        if (isHttpUrl(intent.getPicUrl())) {
-            return intent.getPicUrl();
-        }
-        if (intent.getTopImg() != null && isHttpUrl(intent.getTopImg().getImgKey())) {
-            return intent.getTopImg().getImgKey();
-        }
-        return DEFAULT_CARD_IMAGE_URL;
+    private static String resolveCardImageUrl(WeComPayload payload) {
+        return isHttpUrl(payload.getCardImageUrl()) ? payload.getCardImageUrl() : DEFAULT_CARD_IMAGE_URL;
     }
 
     private static boolean isHttpUrl(String value) {

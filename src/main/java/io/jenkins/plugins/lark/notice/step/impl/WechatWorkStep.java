@@ -9,7 +9,6 @@ import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.NoticeOccasionEnum;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.ButtonModel;
-import io.jenkins.plugins.lark.notice.model.ImgModel;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
 import io.jenkins.plugins.lark.notice.model.payload.WeComPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
@@ -53,14 +52,10 @@ public class WechatWorkStep extends AbstractStep {
     private String messageUrl;
 
     /**
-     * Image URL used by WeCom template cards.
+     * Banner image of the template card, the WeCom {@code card_image.url} field. Must be a public
+     * HTTP(S) URL; anything else keeps the built-in image.
      */
-    private String picUrl;
-
-    /**
-     * Image model used by WeCom template cards.
-     */
-    private ImgModel topImg;
+    private String cardImageUrl;
 
     /**
      * Action buttons used by WeCom template cards.
@@ -72,6 +67,12 @@ public class WechatWorkStep extends AbstractStep {
      * label when blank.
      */
     private String sourceDesc;
+
+    /**
+     * Card header source icon, the WeCom {@code source.icon_url} field. Must be a public HTTP(S)
+     * URL; anything else keeps the built-in Jenkins icon.
+     */
+    private String sourceIconUrl;
 
     /**
      * Title of the card's quote block, the WeCom {@code quote_area.title} field.
@@ -125,13 +126,8 @@ public class WechatWorkStep extends AbstractStep {
     }
 
     @DataBoundSetter
-    public void setPicUrl(String picUrl) {
-        this.picUrl = picUrl;
-    }
-
-    @DataBoundSetter
-    public void setTopImg(ImgModel topImg) {
-        this.topImg = topImg;
+    public void setCardImageUrl(String cardImageUrl) {
+        this.cardImageUrl = cardImageUrl;
     }
 
     @DataBoundSetter
@@ -142,6 +138,11 @@ public class WechatWorkStep extends AbstractStep {
     @DataBoundSetter
     public void setSourceDesc(String sourceDesc) {
         this.sourceDesc = sourceDesc;
+    }
+
+    @DataBoundSetter
+    public void setSourceIconUrl(String sourceIconUrl) {
+        this.sourceIconUrl = sourceIconUrl;
     }
 
     @DataBoundSetter
@@ -213,8 +214,6 @@ public class WechatWorkStep extends AbstractStep {
                 .title(envVars.expand(StringUtils.defaultIfBlank(title, defaultTitle())))
                 .text(expandedText)
                 .messageUrl(expandNullable(envVars, messageUrl))
-                .picUrl(expandNullable(envVars, picUrl))
-                .topImg(buildImg(envVars, topImg))
                 .buttons(resolvedButtons)
                 .atAll(atAll)
                 .atUserIds(expandAts(envVars, ats))
@@ -223,6 +222,8 @@ public class WechatWorkStep extends AbstractStep {
         WeComPayload payload = WeComPayload.builder()
                 .additionalContent(expandedText)
                 .sourceDesc(expandNullable(envVars, sourceDesc))
+                .sourceIconUrl(expandNullable(envVars, sourceIconUrl))
+                .cardImageUrl(expandNullable(envVars, cardImageUrl))
                 .quoteTitle(expandNullable(envVars, quoteTitle))
                 .quoteText(expandNullable(envVars, quoteText))
                 .quoteUrl(expandNullable(envVars, quoteUrl))

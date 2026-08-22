@@ -269,24 +269,52 @@ public class WechatWorkMessageSenderTest {
     }
 
     @Test
-    public void cardImageShouldUsePicUrlWhenProvided() {
+    public void cardImageShouldFollowThePayloadAndFallBackForUnusableValues() {
         WechatWorkMessageSender sender = sender();
         String customImage = "https://cdn.example.com/build-banner.png";
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Build Notice")
                 .statusType(BuildStatusEnum.SUCCESS)
-                .picUrl(customImage)
                 .build();
         BuildContext ctx = BuildContext.builder().locale(Locale.US).build();
-        WeComPayload payload = WeComPayload.builder().build();
 
-        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent, payload,
+        SendResult result = MessageDispatcher.getInstance().send(null, ctx, intent,
+                WeComPayload.builder().cardImageUrl(customImage).build(),
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode cardImage = body().path("template_card").path("card_image");
-        assertEquals(customImage, cardImage.path("url").asText());
+        assertEquals(customImage, body().path("template_card").path("card_image").path("url").asText());
+
+        // A Lark image key is not a URL WeCom can fetch, so the built-in banner has to win.
+        sender.sendCard(ctx, intent, WeComPayload.builder().cardImageUrl("img_v2_key").build());
+
+        assertEquals("https://www.jenkins.io/images/post-images/2025/07/24/redesigning-jenkins-part-two.png",
+                body().path("template_card").path("card_image").path("url").asText());
+    }
+
+    @Test
+    public void sourceIconShouldFollowThePayloadAndFallBackForUnusableValues() {
+        WechatWorkMessageSender sender = sender();
+        MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.CARD).title("Build Notice")
+                .statusType(BuildStatusEnum.SUCCESS).build();
+        BuildContext ctx = BuildContext.builder().locale(Locale.US).statusType(BuildStatusEnum.SUCCESS).build();
+
+        sender.sendCard(ctx, intent, WeComPayload.builder()
+                .sourceDesc("ACME Release Bot")
+                .sourceIconUrl("https://cdn.example.com/acme.png")
+                .build());
+
+        JsonNode source = body().path("template_card").path("source");
+        assertEquals("https://cdn.example.com/acme.png", source.path("icon_url").asText());
+        assertEquals("ACME Release Bot", source.path("desc").asText());
+
+        // WeCom drops the whole source block for anything but a public http(s) URL, so a local path
+        // or an image key must keep the built-in icon rather than be passed through.
+        sender.sendCard(ctx, intent, WeComPayload.builder().sourceIconUrl("img_v2_key").build());
+
+        assertEquals("https://get.jenkins.io/art/jenkins-logo/favicon.ico",
+                body().path("template_card").path("source").path("icon_url").asText());
     }
 
     @Test

@@ -41,7 +41,7 @@ public class WechatWorkStepTest {
     }
 
     @Test
-    public void sourceDescAndQuoteAreaShouldReachThePayload() throws Exception {
+    public void sourceFieldsAndQuoteAreaShouldReachThePayload() throws Exception {
         TestRobots.install("robot-wecom", RobotProtocolType.WECHAT_WORK, "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=token");
 
         FreeStyleProject project = jenkins.createFreeStyleProject("wecom-quote-area");
@@ -49,6 +49,8 @@ public class WechatWorkStepTest {
 
         WechatWorkStep step = new WechatWorkStep("robot-wecom", MsgTypeEnum.CARD);
         step.setSourceDesc("Jenkins ${BUILD_NUMBER}");
+        step.setSourceIconUrl("https://example.com/icon-${BUILD_NUMBER}.png");
+        step.setCardImageUrl("https://example.com/banner-${BUILD_NUMBER}.png");
         step.setQuoteTitle("Release");
         step.setQuoteText("shipped ${BUILD_NUMBER}");
         step.setQuoteUrl("https://example.com/r/${BUILD_NUMBER}");
@@ -59,6 +61,8 @@ public class WechatWorkStepTest {
                 build, envVars, TaskListener.NULL, "robot-wecom");
 
         assertEquals("Jenkins 7", bundle.payload().getSourceDesc());
+        assertEquals("https://example.com/icon-7.png", bundle.payload().getSourceIconUrl());
+        assertEquals("https://example.com/banner-7.png", bundle.payload().getCardImageUrl());
         assertEquals("Release", bundle.payload().getQuoteTitle());
         assertEquals("shipped 7", bundle.payload().getQuoteText());
         assertEquals("https://example.com/r/7", bundle.payload().getQuoteUrl());
