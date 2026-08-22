@@ -19,6 +19,7 @@ import io.jenkins.plugins.lark.notice.tools.ApiResponse;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.net.ProxySelector;
 import java.util.List;
@@ -137,16 +138,14 @@ public final class RobotConfigTestService {
 
     private static BuildJobModel buildTestJobModel(Locale locale) {
         String rootUrl = Jenkins.get().getRootUrl();
-        String configureUrl = StringUtils.appendIfMissing(rootUrl, "/") + "configure";
+        String configureUrl = Strings.CS.appendIfMissing(rootUrl, "/") + "configure";
         User user = Optional.ofNullable(User.current()).orElse(User.getUnknown());
 
-        BuildJobModel buildJobModel = BuildJobModel.builder()
+        return BuildJobModel.builder()
                 .projectName(NoticeI18n.robotTestProjectName(locale))
                 .title(NOTICE_ICON + " " + NoticeI18n.robotTestSuccessTitle(locale))
                 .projectUrl(rootUrl).jobName(NoticeI18n.robotTestJobName(locale)).jobUrl(configureUrl)
                 .statusType(BuildStatusEnum.SUCCESS).duration("-")
                 .executorName(user.getDisplayName()).build();
-
-        return buildJobModel;
     }
 }

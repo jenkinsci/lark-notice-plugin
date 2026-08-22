@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.io.Serializable;
 import java.util.List;
@@ -110,7 +111,7 @@ public class WechatWorkTemplateCardMessage extends BaseWechatWorkMessage {
 
     private static boolean isHttpUrl(String value) {
         String url = StringUtils.trimToEmpty(value);
-        return StringUtils.startsWith(url, "https://") || StringUtils.startsWith(url, "http://");
+        return Strings.CS.startsWithAny(url, "https://", "http://");
     }
 
     /**

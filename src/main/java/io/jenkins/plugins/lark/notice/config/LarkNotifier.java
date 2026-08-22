@@ -103,6 +103,18 @@ public class LarkNotifier extends Notifier implements SimpleBuildStep, LarkNotif
     }
 
     /**
+     * Narrows the descriptor type. {@link Notifier#getDescriptor()} returns a raw
+     * {@link BuildStepDescriptor}, which would otherwise implement {@code Describable#getDescriptor()}
+     * through an unchecked conversion and warn on every concrete subclass.
+     *
+     * @return this notifier's descriptor
+     */
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
+
+    /**
      * Returns a lazily initialized dispatcher for runtime message sending.
      */
     private MessageDispatcher getMessageDispatcher() {

@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.HttpResponse;
@@ -240,7 +241,7 @@ public class LarkRobotConfig implements Describable<LarkRobotConfig> {
 
         String normalizedBaseUrl = RobotWebhookResolver.normalizeBaseUrl(getBaseUrl());
         if ("https://open.larksuite.com".equalsIgnoreCase(normalizedBaseUrl)
-                || StringUtils.containsIgnoreCase(getWebhook(), "open.larksuite.com")) {
+                || Strings.CI.contains(getWebhook(), "open.larksuite.com")) {
             return Messages.notifier_robot_provider_lark();
         }
         return Messages.notifier_robot_provider_feishu();

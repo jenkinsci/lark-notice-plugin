@@ -61,6 +61,17 @@ public class LarkManagementLinkTest {
         this.jenkins = rule;
     }
 
+    /**
+     * Resolves a path against the running Jenkins root. Uses {@link java.net.URI} because the
+     * {@code URL(URL, String)} constructor is deprecated.
+     *
+     * @param path root-relative endpoint path
+     * @return absolute endpoint URL
+     */
+    private URL endpoint(String path) throws Exception {
+        return jenkins.getURL().toURI().resolve(path).toURL();
+    }
+
     @Test
     public void managementLinkShouldExposeStableMetadata() {
         LarkManagementLink link = new LarkManagementLink();
@@ -85,7 +96,7 @@ public class LarkManagementLinkTest {
         LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
 
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
-            WebRequest request = new WebRequest(new URL(jenkins.getURL(), "manage/lark/export"), HttpMethod.POST);
+            WebRequest request = new WebRequest(endpoint("manage/lark/export"), HttpMethod.POST);
             webClient.addCrumb(request);
             Page page = webClient.getPage(request);
 
@@ -106,7 +117,7 @@ public class LarkManagementLinkTest {
 
         String payload = JsonUtils.toJson(createImportPayload());
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
-            WebRequest request = new WebRequest(new URL(jenkins.getURL(), "manage/lark/import"), HttpMethod.POST);
+            WebRequest request = new WebRequest(endpoint("manage/lark/import"), HttpMethod.POST);
             request.setRequestParameters(List.of(new NameValuePair("payload", payload)));
             webClient.addCrumb(request);
 
@@ -137,7 +148,7 @@ public class LarkManagementLinkTest {
                 )
         ));
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
-            WebRequest request = new WebRequest(new URL(jenkins.getURL(), "manage/lark/previewImport"), HttpMethod.POST);
+            WebRequest request = new WebRequest(endpoint("manage/lark/previewImport"), HttpMethod.POST);
             request.setRequestParameters(List.of(
                     new NameValuePair("payload", payload),
                     new NameValuePair("mode", "merge")
@@ -165,7 +176,7 @@ public class LarkManagementLinkTest {
         snapshot.setPluginVersion("999.0");
 
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
-            WebRequest request = new WebRequest(new URL(jenkins.getURL(), "manage/lark/import"), HttpMethod.POST);
+            WebRequest request = new WebRequest(endpoint("manage/lark/import"), HttpMethod.POST);
             request.setRequestParameters(List.of(new NameValuePair("payload", JsonUtils.toJson(snapshot))));
             webClient.addCrumb(request);
 
@@ -195,7 +206,7 @@ public class LarkManagementLinkTest {
                 )
         ));
         try (JenkinsRule.WebClient webClient = jenkins.createWebClient()) {
-            WebRequest request = new WebRequest(new URL(jenkins.getURL(), "manage/lark/import"), HttpMethod.POST);
+            WebRequest request = new WebRequest(endpoint("manage/lark/import"), HttpMethod.POST);
             request.setRequestParameters(List.of(
                     new NameValuePair("payload", payload),
                     new NameValuePair("mode", "merge")
