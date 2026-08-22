@@ -1,28 +1,17 @@
 package io.jenkins.plugins.lark.notice.step.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.net.httpserver.HttpServer;
 import hudson.model.Result;
-import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
-import io.jenkins.plugins.lark.notice.sdk.MessageSenderRegistry;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.After;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
+import io.jenkins.plugins.lark.notice.testing.WebhookServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 
@@ -36,43 +25,19 @@ public class DingTalkStepTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
-    private HttpServer server;
-
-    private AtomicReference<String> requestBody;
+    @Rule
+    public WebhookServer webhook = WebhookServer.dingTalk();
 
     @Before
-    public void setUp() throws IOException {
-        requestBody = new AtomicReference<>();
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/robot/send", exchange -> {
-            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] response = "{\"errcode\":0,\"errmsg\":\"ok\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-        server.start();
-
-        LarkRobotConfig robot = new LarkRobotConfig("robot-ding", "DingTalk",
-                "http://localhost:" + server.getAddress().getPort() + "/robot/send?access_token=t", List.of());
-        robot.setProtocolType(RobotProtocolType.DING_TALK);
-        robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
-        MessageSenderRegistry.getInstance().clear();
-    }
-
-    @After
-    public void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
+    public void installRobot() {
+        TestRobots.install("robot-ding", RobotProtocolType.DING_TALK, webhook.url());
     }
 
     private JsonNode runAndCapture(String args) throws Exception {
         WorkflowJob job = jenkins.createProject(WorkflowJob.class, "ding-" + System.nanoTime());
         job.setDefinition(new CpsFlowDefinition("dingTalk " + args, true));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
-        return JsonUtils.readTree(requestBody.get());
+        return webhook.json();
     }
 
     @Test

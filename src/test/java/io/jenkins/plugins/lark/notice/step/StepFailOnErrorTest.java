@@ -9,6 +9,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
 import org.junit.Rule;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -27,11 +28,7 @@ public class StepFailOnErrorTest {
 
     @Before
     public void setUp() {
-        LarkRobotConfig robot = new LarkRobotConfig(
-                "robot-unreachable", "Unreachable", "http://127.0.0.1:1/open-apis/bot/v2/hook/x", List.of());
-        robot.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
-        robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
+        TestRobots.install("robot-unreachable", RobotProtocolType.LARK_COMPATIBLE, "http://127.0.0.1:1/open-apis/bot/v2/hook/x");
     }
 
     @Test

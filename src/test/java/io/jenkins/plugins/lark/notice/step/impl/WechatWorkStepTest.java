@@ -15,6 +15,7 @@ import io.jenkins.plugins.lark.notice.model.CardField;
 import io.jenkins.plugins.lark.notice.model.CardFieldModel;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import org.junit.Rule;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -36,11 +37,7 @@ public class WechatWorkStepTest {
 
     @Test
     public void sourceDescAndQuoteAreaShouldReachThePayload() throws Exception {
-        LarkRobotConfig robot = new LarkRobotConfig("robot-wecom", "WeCom Robot",
-                "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=token", List.of());
-        robot.setProtocolType(RobotProtocolType.WECHAT_WORK);
-        robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
+        TestRobots.install("robot-wecom", RobotProtocolType.WECHAT_WORK, "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=token");
 
         FreeStyleProject project = jenkins.createFreeStyleProject("wecom-quote-area");
         FreeStyleBuild build = project.scheduleBuild2(0).get();

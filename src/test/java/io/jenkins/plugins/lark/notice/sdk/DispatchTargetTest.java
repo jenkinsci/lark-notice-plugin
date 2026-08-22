@@ -13,13 +13,16 @@ import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.impl.DingMessageSender;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import org.junit.Rule;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -45,11 +48,7 @@ public class DispatchTargetTest {
      */
     @Test
     public void explicitTargetProtocolShouldWinOverSavedConfiguration() {
-        LarkRobotConfig saved = new LarkRobotConfig("robot-x", "Saved As Lark",
-                "http://127.0.0.1:1/open-apis/bot/v2/hook/x", List.of());
-        saved.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
-        saved.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(saved)));
+        TestRobots.install("robot-x", RobotProtocolType.LARK_COMPATIBLE, "http://127.0.0.1:1/open-apis/bot/v2/hook/x");
 
         MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.SHARE_CHAT).text("x").build();
         DispatchTarget target = new DispatchTarget("robot-x", "Form Name",
@@ -64,27 +63,22 @@ public class DispatchTargetTest {
 
     @Test
     public void resolveTargetShouldReflectSavedConfiguration() {
-        LarkRobotConfig saved = new LarkRobotConfig("robot-y", "Saved Robot",
-                "http://127.0.0.1:1/robot/send?access_token=t", List.of());
-        saved.setProtocolType(RobotProtocolType.DING_TALK);
-        saved.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(saved)));
-        MessageSenderRegistry.getInstance().clear();
+        TestRobots.install(TestRobots.robot("robot-y", "Saved Robot",
+                RobotProtocolType.DING_TALK, "http://127.0.0.1:1/robot/send?access_token=t"));
 
         DispatchTarget target = MessageDispatcher.getInstance().resolveTarget("robot-y");
 
         assertTrue(target.sender() instanceof DingMessageSender);
-        assertTrue(RobotProtocolType.DING_TALK.equals(target.protocol()));
-        assertTrue("Saved Robot".equals(target.robotName()));
+        assertEquals(RobotProtocolType.DING_TALK, target.protocol());
+        assertEquals("Saved Robot", target.robotName());
     }
 
     @Test
     public void missingRobotShouldYieldATargetWithoutASender() {
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>());
-        MessageSenderRegistry.getInstance().clear();
+        TestRobots.install();
 
         DispatchTarget target = MessageDispatcher.getInstance().resolveTarget("nope");
 
-        assertFalse(target.sender() != null);
+        assertNull(target.sender());
     }
 }

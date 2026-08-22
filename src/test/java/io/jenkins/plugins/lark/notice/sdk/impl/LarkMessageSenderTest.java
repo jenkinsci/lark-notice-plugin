@@ -1,29 +1,23 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
-import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
-import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.LarkPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
+import io.jenkins.plugins.lark.notice.testing.WebhookServer;
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 
@@ -34,45 +28,19 @@ import static org.junit.Assert.*;
  */
 public class LarkMessageSenderTest {
 
-    private HttpServer server;
-
-    private AtomicReference<String> requestBody;
-
-    @Before
-    public void setUp() throws IOException {
-        requestBody = new AtomicReference<>();
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/open-apis/bot/v2/hook/", exchange -> {
-            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] response = "{\"code\":0,\"msg\":\"success\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-        server.start();
-    }
-
-    @After
-    public void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
-    }
+    @Rule
+    public WebhookServer webhook = WebhookServer.lark();
 
     private LarkMessageSender sender() {
         return sender(null);
     }
 
     private LarkMessageSender sender(String keys) {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.LARK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/open-apis/bot/v2/hook/token");
-        robotConfig.setKeys(keys);
-        return new LarkMessageSender(robotConfig);
+        return TestRobots.larkSender(webhook.url(), keys);
     }
 
     private JsonNode body() {
-        return JsonUtils.readTree(requestBody.get());
+        return webhook.json();
     }
 
     @Test
@@ -87,7 +55,7 @@ public class LarkMessageSenderTest {
         SendResult result = sender().sendText(BuildContext.builder().build(), intent, LarkPayload.builder().build());
 
         assertTrue(result.isOk());
-        assertEquals(requestBody.get(), result.getRequestBody());
+        assertEquals(webhook.body(), result.getRequestBody());
         JsonNode body = body();
         assertEquals("text", body.path("msg_type").asText());
         // atAll wins: individual ids are not appended when at-all is set.
@@ -177,7 +145,7 @@ public class LarkMessageSenderTest {
         JsonNode body = body();
         assertEquals("interactive", body.path("msg_type").asText());
         assertTrue(body.path("card").path("header").toString().contains("Build Notice Jenkins"));
-        assertTrue(requestBody.get().contains("**done**"));
+        assertTrue(webhook.body().contains("**done**"));
     }
 
     @Test
@@ -194,8 +162,8 @@ public class LarkMessageSenderTest {
         sender().sendCard(BuildContext.builder().locale(Locale.US).build(), intent, LarkPayload.builder().build());
 
         assertEquals("interactive", body().path("msg_type").asText());
-        assertTrue(requestBody.get().contains("Changes"));
-        assertTrue(requestBody.get().contains("https://example.com/changes"));
+        assertTrue(webhook.body().contains("Changes"));
+        assertTrue(webhook.body().contains("https://example.com/changes"));
     }
 
     /**
@@ -216,7 +184,7 @@ public class LarkMessageSenderTest {
         JsonNode body = body();
         assertEquals("interactive", body.path("msg_type").asText());
         assertEquals("red", body.path("card").path("header").path("template").asText());
-        assertFalse(requestBody.get().contains("ignored when raw"));
+        assertFalse(webhook.body().contains("ignored when raw"));
     }
 
     @Test

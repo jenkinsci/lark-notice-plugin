@@ -1,28 +1,17 @@
 package io.jenkins.plugins.lark.notice.step.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.net.httpserver.HttpServer;
 import hudson.model.Result;
-import io.jenkins.plugins.lark.notice.config.LarkGlobalConfig;
-import io.jenkins.plugins.lark.notice.config.LarkRobotConfig;
 import io.jenkins.plugins.lark.notice.enums.RobotProtocolType;
-import io.jenkins.plugins.lark.notice.enums.WebhookEndpointMode;
-import io.jenkins.plugins.lark.notice.sdk.MessageSenderRegistry;
-import io.jenkins.plugins.lark.notice.tools.JsonUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.After;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
+import io.jenkins.plugins.lark.notice.testing.WebhookServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,43 +26,19 @@ public class LarkStepPipelineTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
-    private HttpServer server;
-
-    private AtomicReference<String> requestBody;
+    @Rule
+    public WebhookServer webhook = WebhookServer.lark();
 
     @Before
-    public void setUp() throws IOException {
-        requestBody = new AtomicReference<>();
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/open-apis/bot/v2/hook/", exchange -> {
-            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] response = "{\"code\":0,\"msg\":\"success\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-        server.start();
-
-        LarkRobotConfig robot = new LarkRobotConfig("robot-lark", "Lark",
-                "http://localhost:" + server.getAddress().getPort() + "/open-apis/bot/v2/hook/token", List.of());
-        robot.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
-        robot.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(robot)));
-        MessageSenderRegistry.getInstance().clear();
-    }
-
-    @After
-    public void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
+    public void installRobot() {
+        TestRobots.install("robot-lark", RobotProtocolType.LARK_COMPATIBLE, webhook.url());
     }
 
     private JsonNode runAndCapture(String args) throws Exception {
         WorkflowJob job = jenkins.createProject(WorkflowJob.class, "lark-" + System.nanoTime());
         job.setDefinition(new CpsFlowDefinition("lark " + args, true));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
-        return JsonUtils.readTree(requestBody.get());
+        return webhook.json();
     }
 
     @Test
@@ -111,7 +76,7 @@ public class LarkStepPipelineTest {
                 + "[keyname: '\u53d1\u5e03\u5355', value: '\u8be6\u60c5', url: 'https://example.com/r/${BUILD_NUMBER}']]");
 
         assertEquals("interactive", body.path("msg_type").asText());
-        String rendered = requestBody.get();
+        String rendered = webhook.body();
         assertTrue(rendered.contains("**\u7248\u672c**: 1.2.0"));
         assertTrue(rendered.contains("[\u8be6\u60c5](https://example.com/r/1)"));
         // Free text stays, after the rows.

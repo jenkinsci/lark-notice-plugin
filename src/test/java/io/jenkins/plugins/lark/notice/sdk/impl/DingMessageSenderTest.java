@@ -1,27 +1,21 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
-import io.jenkins.plugins.lark.notice.enums.RobotType;
 import io.jenkins.plugins.lark.notice.model.BuildContext;
 import io.jenkins.plugins.lark.notice.model.MessageIntent;
-import io.jenkins.plugins.lark.notice.model.RobotConfigModel;
 import io.jenkins.plugins.lark.notice.model.payload.DingPayload;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
+import io.jenkins.plugins.lark.notice.testing.WebhookServer;
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 
@@ -31,45 +25,19 @@ import static org.junit.Assert.*;
  */
 public class DingMessageSenderTest {
 
-    private HttpServer server;
-
-    private AtomicReference<String> requestBody;
-
-    @Before
-    public void setUp() throws IOException {
-        requestBody = new AtomicReference<>();
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/robot/send", exchange -> {
-            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] response = "{\"errcode\":0,\"errmsg\":\"ok\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-        server.start();
-    }
-
-    @After
-    public void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
-    }
+    @Rule
+    public WebhookServer webhook = WebhookServer.dingTalk();
 
     private DingMessageSender sender() {
         return sender(null);
     }
 
     private DingMessageSender sender(String keys) {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.DING_TALK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/robot/send?access_token=t");
-        robotConfig.setKeys(keys);
-        return new DingMessageSender(robotConfig);
+        return TestRobots.dingSender(webhook.url(), keys);
     }
 
     private JsonNode body() {
-        return JsonUtils.readTree(requestBody.get());
+        return webhook.json();
     }
 
     @Test
@@ -84,7 +52,7 @@ public class DingMessageSenderTest {
         SendResult result = sender().sendText(BuildContext.builder().build(), intent, DingPayload.builder().build());
 
         assertTrue(result.isOk());
-        assertEquals(requestBody.get(), result.getRequestBody());
+        assertEquals(webhook.body(), result.getRequestBody());
         JsonNode body = body();
         assertEquals("text", body.path("msgtype").asText());
         assertTrue(body.path("text").path("content").asText().startsWith("hello"));
@@ -177,7 +145,7 @@ public class DingMessageSenderTest {
         assertEquals("https://example.com/build", card.path("singleURL").asText());
         assertTrue(card.path("singleUrl").isMissingNode());
         assertTrue(card.path("btns").isMissingNode() || card.path("btns").isNull());
-        assertFalse(requestBody.get().contains("Changes"));
+        assertFalse(webhook.body().contains("Changes"));
         // The single-jump branch appends the security keyword like the btns branch does.
         assertTrue(card.path("text").asText().contains("body Jenkins"));
     }

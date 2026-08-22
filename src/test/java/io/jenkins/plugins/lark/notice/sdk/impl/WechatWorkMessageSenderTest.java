@@ -1,7 +1,6 @@
 package io.jenkins.plugins.lark.notice.sdk.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.net.httpserver.HttpServer;
 import io.jenkins.plugins.lark.notice.enums.BuildStatusEnum;
 import io.jenkins.plugins.lark.notice.enums.MsgTypeEnum;
 import io.jenkins.plugins.lark.notice.enums.RobotType;
@@ -13,17 +12,14 @@ import io.jenkins.plugins.lark.notice.sdk.MessageDispatcher;
 import io.jenkins.plugins.lark.notice.sdk.model.SendResult;
 import io.jenkins.plugins.lark.notice.sdk.model.lark.support.Button;
 import io.jenkins.plugins.lark.notice.tools.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
+import io.jenkins.plugins.lark.notice.testing.WebhookServer;
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 
@@ -32,9 +28,8 @@ import static org.junit.Assert.*;
  */
 public class WechatWorkMessageSenderTest {
 
-    private HttpServer server;
-
-    private AtomicReference<String> requestBody;
+    @Rule
+    public WebhookServer webhook = WebhookServer.weCom();
 
     private static void assertHorizontalContent(JsonNode content, int type, String key, String value, String url) {
         assertEquals(type, content.path("type").asInt());
@@ -47,34 +42,17 @@ public class WechatWorkMessageSenderTest {
         }
     }
 
-    @Before
-    public void setUp() throws IOException {
-        requestBody = new AtomicReference<>();
-        server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/cgi-bin/webhook/send", exchange -> {
-            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] response = "{\"errcode\":0,\"errmsg\":\"ok\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-        server.start();
+    private WechatWorkMessageSender sender() {
+        return TestRobots.weComSender(webhook.url(), null);
     }
 
-    @After
-    public void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
+    private JsonNode body() {
+        return webhook.json();
     }
 
     @Test
     public void sendTextShouldUseWechatWorkPayloadShape() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder()
                 .text("hello")
                 .atAll(false)
@@ -86,20 +64,16 @@ public class WechatWorkMessageSenderTest {
         SendResult result = sender.sendText(ctx, intent, payload);
 
         assertTrue(result.isOk());
-        assertEquals(requestBody.get(), result.getRequestBody());
-        assertTrue(requestBody.get().contains("\"msgtype\":\"text\""));
-        assertTrue(requestBody.get().contains("\"content\":\"hello\""));
-        assertTrue(requestBody.get().contains("\"mentioned_list\":[\"zhangsan\"]"));
-        assertTrue(requestBody.get().contains("\"mentioned_mobile_list\":[\"13800138000\"]"));
+        assertEquals(webhook.body(), result.getRequestBody());
+        assertTrue(webhook.body().contains("\"msgtype\":\"text\""));
+        assertTrue(webhook.body().contains("\"content\":\"hello\""));
+        assertTrue(webhook.body().contains("\"mentioned_list\":[\"zhangsan\"]"));
+        assertTrue(webhook.body().contains("\"mentioned_mobile_list\":[\"13800138000\"]"));
     }
 
     @Test
     public void cardMessageShouldUseNewsNoticeTemplateCardPayload() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Build Notice")
@@ -128,7 +102,7 @@ public class WechatWorkMessageSenderTest {
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode root = JsonUtils.readTree(requestBody.get());
+        JsonNode root = body();
         JsonNode card = root.path("template_card");
         assertEquals("template_card", root.path("msgtype").asText());
         assertEquals("news_notice", card.path("card_type").asText());
@@ -160,11 +134,7 @@ public class WechatWorkMessageSenderTest {
 
     @Test
     public void cardWithAdditionalContentShouldRenderVerticalBlock() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Build Notice")
@@ -185,7 +155,7 @@ public class WechatWorkMessageSenderTest {
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode card = JsonUtils.readTree(requestBody.get()).path("template_card");
+        JsonNode card = body().path("template_card");
         JsonNode vertical = card.path("vertical_content_list");
         assertFalse(vertical.isMissingNode());
         assertEquals("Build Notice", vertical.get(0).path("title").asText());
@@ -194,11 +164,7 @@ public class WechatWorkMessageSenderTest {
 
     @Test
     public void cardWithCustomCardFieldsShouldOverrideDefaultRows() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Release")
@@ -221,7 +187,7 @@ public class WechatWorkMessageSenderTest {
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
+        JsonNode rows = body().path("template_card").path("horizontal_content_list");
         assertEquals(2, rows.size());
         assertEquals("版本", rows.get(0).path("keyname").asText());
         assertEquals("1.2.0", rows.get(0).path("value").asText());
@@ -232,11 +198,7 @@ public class WechatWorkMessageSenderTest {
 
     @Test
     public void cardFieldsShouldBeCappedAtSixRows() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
                 .title("Release")
@@ -265,7 +227,7 @@ public class WechatWorkMessageSenderTest {
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode rows = JsonUtils.readTree(requestBody.get()).path("template_card").path("horizontal_content_list");
+        JsonNode rows = body().path("template_card").path("horizontal_content_list");
         assertEquals(6, rows.size());
         assertEquals("k1", rows.get(0).path("keyname").asText());
         assertEquals("k6", rows.get(5).path("keyname").asText());
@@ -273,23 +235,19 @@ public class WechatWorkMessageSenderTest {
 
     @Test
     public void quoteAreaShouldBeOmittedUnlessConfigured() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         MessageIntent intent = MessageIntent.builder().type(MsgTypeEnum.CARD).title("T")
                 .statusType(BuildStatusEnum.SUCCESS).build();
         BuildContext ctx = BuildContext.builder().locale(Locale.US).build();
 
         sender.sendCard(ctx, intent, WeComPayload.builder().build());
-        assertFalse(JsonUtils.readTree(requestBody.get()).path("template_card").has("quote_area"));
+        assertFalse(body().path("template_card").has("quote_area"));
 
         sender.sendCard(ctx, intent, WeComPayload.builder()
                 .quoteTitle("Release note").quoteText("v1.2.0 shipped")
                 .quoteUrl("https://example.com/release").build());
 
-        JsonNode quote = JsonUtils.readTree(requestBody.get()).path("template_card").path("quote_area");
+        JsonNode quote = body().path("template_card").path("quote_area");
         assertEquals(1, quote.path("type").asInt());
         assertEquals("https://example.com/release", quote.path("url").asText());
         assertEquals("Release note", quote.path("title").asText());
@@ -298,27 +256,19 @@ public class WechatWorkMessageSenderTest {
 
     @Test
     public void quoteAreaWithoutUrlShouldHaveNoClickAction() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         sender.sendCard(BuildContext.builder().locale(Locale.US).build(),
                 MessageIntent.builder().type(MsgTypeEnum.CARD).title("T").build(),
                 WeComPayload.builder().quoteText("no link").build());
 
-        JsonNode quote = JsonUtils.readTree(requestBody.get()).path("template_card").path("quote_area");
+        JsonNode quote = body().path("template_card").path("quote_area");
         assertEquals(0, quote.path("type").asInt());
         assertEquals("no link", quote.path("quote_text").asText());
     }
 
     @Test
     public void cardImageShouldUsePicUrlWhenProvided() {
-        RobotConfigModel robotConfig = new RobotConfigModel();
-        robotConfig.setRobotType(RobotType.WECHAT_WORK);
-        robotConfig.setWebhook("http://localhost:" + server.getAddress().getPort() + "/cgi-bin/webhook/send?key=token");
-        WechatWorkMessageSender sender = new WechatWorkMessageSender(robotConfig);
-
+        WechatWorkMessageSender sender = sender();
         String customImage = "https://cdn.example.com/build-banner.png";
         MessageIntent intent = MessageIntent.builder()
                 .type(MsgTypeEnum.CARD)
@@ -333,7 +283,7 @@ public class WechatWorkMessageSenderTest {
                 new DispatchTarget(null, null, RobotProtocolType.WECHAT_WORK, null, sender));
 
         assertTrue(result.isOk());
-        JsonNode cardImage = JsonUtils.readTree(requestBody.get()).path("template_card").path("card_image");
+        JsonNode cardImage = body().path("template_card").path("card_image");
         assertEquals(customImage, cardImage.path("url").asText());
     }
 

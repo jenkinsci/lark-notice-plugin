@@ -11,6 +11,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Rule;
+import io.jenkins.plugins.lark.notice.testing.TestRobots;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -31,12 +32,7 @@ public class CrossProtocolStepTest {
 
     @Before
     public void setUp() {
-        LarkRobotConfig lark = new LarkRobotConfig("robot-lark", "Lark",
-                "http://127.0.0.1:1/open-apis/bot/v2/hook/x", List.of());
-        lark.setProtocolType(RobotProtocolType.LARK_COMPATIBLE);
-        lark.setEndpointMode(WebhookEndpointMode.FULL_WEBHOOK);
-        LarkGlobalConfig.getInstance().setRobotConfigs(new ArrayList<>(List.of(lark)));
-        MessageSenderRegistry.getInstance().clear();
+        TestRobots.install("robot-lark", RobotProtocolType.LARK_COMPATIBLE, "http://127.0.0.1:1/open-apis/bot/v2/hook/x");
     }
 
     @Test
