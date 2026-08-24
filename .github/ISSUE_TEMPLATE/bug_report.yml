@@ -1,0 +1,92 @@
+name: 缺陷报告 / Bug Report
+description: 插件功能不符合预期、构建报错或消息发送异常
+title: "Jenkins <版本>：<在什么条件下发生了什么>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **标题规范**：写「条件 + 现象」，并带上具体版本号或异常类名。
+
+        - 推荐：`Jenkins 2.533：RobotConfigModel.getNoSsl() 返回 null 导致 NPE`
+        - 不推荐：`最新版本无法发送消息` / `求助：报错了` / `关于 URL 的问题`
+
+        「最新版本」会随时间过时，请写实际版本号。
+
+  - type: input
+    id: jenkins-version
+    attributes:
+      label: Jenkins 版本
+      placeholder: "2.555.3"
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本
+      description: 在 `Manage Jenkins / Plugins` 中查看
+      placeholder: "2.1.7"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 机器人平台
+      options:
+        - 飞书 / Lark
+        - 钉钉 / DingTalk
+        - 企业微信 / WeCom
+    validations:
+      required: true
+
+  - type: dropdown
+    id: job-type
+    attributes:
+      label: 任务类型
+      options:
+        - Pipeline
+        - 多分支流水线 / Multibranch Pipeline
+        - Organization Folder
+        - Freestyle
+        - 其他 / Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 实际发生了什么，期望的行为又是什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 在全局配置中添加一个飞书机器人，测试按钮可正常发送
+        2. 在 Job 配置中启用该机器人，勾选 SUCCESS / FAILURE
+        3. 触发构建，飞书未收到通知
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 构建日志 / 异常堆栈
+      description: 完整堆栈比截图更有用，也更容易被后来者搜索到。此处内容会自动按代码块渲染，无需手动包裹。
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: 相关配置或 Pipeline 片段
+      description: 请脱敏后粘贴，注意去掉 webhook 地址、签名密钥等信息。
+      render: groovy
+    validations:
+      required: false

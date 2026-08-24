@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用文档 / Documentation
+    url: https://721806280.github.io/lark-notice-plugin-doc
+    about: 安装配置、Pipeline 用法、消息模板变量说明，提问前请先查阅文档。
+  - name: 检索已有 issue / Search existing issues
+    url: https://github.com/721806280/lark-notice-plugin/issues?q=is%3Aissue
+    about: 大部分问题已有人提过，搜索关键字（版本号、异常类名）通常能直接找到答案。

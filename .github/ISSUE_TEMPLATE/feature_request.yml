@@ -1,0 +1,49 @@
+name: 功能需求 / Feature Request
+description: 希望插件增加或改进某项能力
+title: "支持<希望增加的能力>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **标题规范**：写「支持 + 能力」，直接说明要什么。
+
+        - 推荐：`支持在全局配置中添加机器人并应用到所有 Job`
+        - 不推荐：`能不能在管理设置里面，新增一个机器人……` / `是否考虑添加二维码功能`
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 使用场景
+      description: 你在什么场景下遇到了阻碍？目前是怎么绕过的？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的能力
+      description: 希望插件提供什么。如果对配置项或 Pipeline 参数的形式有设想，也可以写出来。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 涉及平台
+      multiple: true
+      options:
+        - 飞书 / Lark
+        - 钉钉 / DingTalk
+        - 企业微信 / WeCom
+        - 与平台无关 / Platform-agnostic
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考资料
+      description: 相关的开放平台文档链接、其他插件的实现等。
+    validations:
+      required: false

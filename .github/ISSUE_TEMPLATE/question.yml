@@ -1,0 +1,38 @@
+name: 使用提问 / Question
+description: 配置方法、Pipeline 用法等使用问题
+title: "<场景>中如何<做某事>"
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提问前请先查阅[使用文档](https://721806280.github.io/lark-notice-plugin-doc)。
+
+        **标题规范**：把场景写进标题，方便后来者搜索到同样的问题。
+
+        - 推荐：`Freestyle 项目中如何配置 image_key 展示图片`
+        - 不推荐：`求助：处理当前请求时发生了错误` / `请问一下`
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本
+      placeholder: "2.1.7"
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: 想实现什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已经尝试过的配置或脚本
+      description: 请脱敏后粘贴，注意去掉 webhook 地址、签名密钥等信息。
+      render: groovy
+    validations:
+      required: false
